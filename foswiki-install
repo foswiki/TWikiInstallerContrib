@@ -93,7 +93,7 @@ my $jsInstallButton = jsInstallButton();
 ################################################################################
 
 print $q->header(),
-    $q->start_html( -title => 'TWiki Installer',
+    $q->start_html( -title => 'Foswiki Installer',
 		    -BGCOLOR => '#f4c000',
 		    -head => [ map { 
 			       Link({-rel => $_,
@@ -103,7 +103,7 @@ print $q->header(),
 		    -style => {
 			-src => [ map { "http://twiki.biohack.net/pub/TWikiInstallerContrib/$_.css" } qw( reset styles ) ],
 		     },
-		    -onload => "expand_collapse_repositories('twiki.org'); checkEnableInstallButton(event);",
+		    -onload => "expand_collapse_repositories('foswiki.org'); checkEnableInstallButton(event);",
 		    -onkeyup => "checkEnableInstallButton(event)",
 		    -onclick => "checkEnableInstallButton(event)",
 		    -script => $jsInstallButton,
@@ -440,8 +440,10 @@ __JAVASCRIPT__
 
     foreach my $rep ( sort { lc $a cmp lc $b } keys %$repository ) {
 	next unless scalar @{$repository->{$rep}};	# don't print empty repositories
+	my $favicon = $repository->{$rep}->[0]->{favicon} || "http://$rep/favicon.ico";
+#	my $favicon = "http://$rep/favicon.ico";
 	$text .= qq{<div class=repository>
-<div class=repositoryName onclick="expand_collapse_repositories('$rep')" ><img src="http://$rep/favicon.ico" width="16" height="16" /> $rep</div>
+<div class=repositoryName onclick="expand_collapse_repositories('$rep')" ><img src="$favicon" width="16" height="16" /> $rep</div>
 <div name="repository_files" id="$rep"><ul>};
 	foreach my $twikifor ( @{$repository->{$rep}} ) {
 	    $text .= q{<li><a href="javascript:()" onclick="document.getElementById('TWikiFor').value = } . qq{'$twikifor->{url}'" >$twikifor->{url}</a></li>};
@@ -461,17 +463,15 @@ sub twikiForMenu {
     my $text = '';
 
 my $repository = {
+    'Nightly Builds' => [
+			 { url => 'http://fosiki.com/Foswiki_trunk/http://fosiki.com/Foswiki_trunk/FoswikiCore.zip',
+			   favicon => 'http://fosiki.com/favicon.ico',
+		       },
+			 ],
+    'foswiki.org' => [
+		      ],
     'twiki.org' => [
-                    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.2.0-rc2.zip', },
-		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.1.2.zip', },
-#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.1.1.zip', },
-#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.1.0.zip', },
-		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.0.5.zip', },
-#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.0.4.zip', },
-#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.0.3.zip', },
-#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.0.2.zip', },
-#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.0.1.zip', },
-#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.0.0.zip', },
+		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.2.4.zip', },
     ],
     'twiki.biohack.net' => [
 #		      { url => 'http://twiki.biohack.net/pub/twiki/TWiki-SVN-MAIN.zip', },
@@ -502,13 +502,13 @@ my $repository = {
 <div id="container"><a id="topofpage"></a><div class="section">
 <!--==========================================================================================-->
 <div id="header"><!-- header image --></div>
-<h1>TWiki Installer</h1>
-The TWiki Installer will install a TWiki release to<br /> 
+<h1>Foswiki Installer</h1>
+The Foswiki Installer will install a Foswiki release to<br /> 
 <div id=twikiUrl><big>$twikiUrl</big></div>
 <div class=note>If this is not the desired URL, move this script to the correct directory and load the page in the browser from the new location.</div>
 <!--
 <ol>
-<li>Select a TWiki release from the list of available repositories below.</li>
+<li>Select a Foswiki release from the list of available repositories below.</li>
 <li>Fill in the fields below; <strong>all fields are required</strong>. Many have been automatically determined or already filled in with reasonable defaults.
 </li>
 <li>Click the <strong>Install</strong> button. That's all! </li>
@@ -516,9 +516,9 @@ The TWiki Installer will install a TWiki release to<br />
 -->
 <form method="post" action="" enctype="application/x-www-form-urlencoded" />
 <!--==========================================================================================-->
-<fieldset><legend>1. Choose a TWiki Release</legend>
+<fieldset><legend>1. Choose a Foswiki Release</legend>
 
-TWiki release to install <input type="text" name="TWikiFor" id="TWikiFor" value="http://twiki.org/p/pub/Codev/Release/TWiki-4.1.2.zip" size="50" />
+Foswiki release to install <input type="text" name="TWikiFor" id="TWikiFor" value="http://fosiki.com/Foswiki_trunk/http://fosiki.com/Foswiki_trunk/FoswikiCore.zip" size="50" />
 <div class=help id="TWikiFor_help" >Select a TWiki release from the list below <i>or</i> enter a URL manually
 <!-- By the way, this should also be able to install TWiki extensions -->
 </div>
@@ -529,7 +529,7 @@ TWiki release to install <input type="text" name="TWikiFor" id="TWikiFor" value=
 qq{</fieldset>
 
 <!--==========================================================================================-->
-<fieldset><legend>2. Set TWiki Settings</legend>
+<fieldset><legend>2. Set Foswiki Settings</legend>
 <div id=configure><fieldset id=configure><legend>configure</legend>
 username <input $htpasswd_avail type=text name=configure_admin id=configure_admin value='wikimaster' /><br />
 <div class=help id=configure_admin_help>This is the account name to allow access to TWiki's system configuration<br/></div>
@@ -554,7 +554,7 @@ A password will be automatically generated and sent to the email specified by We
 <div class=help id=perl_help>You may also change it to a perl accelerator, e.g,. <a target="_new" href="http://www.daemoninc.com/SpeedyCGI/">SpeedyCGI</a><br/></div>
 </fieldset>
 <!--==========================================================================================-->
-<fieldset><legend>3. Install TWiki!</legend>
+<fieldset><legend>3. Install Foswiki!</legend>
 $strHtmlForceInstallation
 <input type="submit" name="install" id="install" value="Install" /> to $twikiDir <br />
 </fieldset>
