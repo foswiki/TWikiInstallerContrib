@@ -32,9 +32,9 @@ use warnings;
 # CGI parameters:
 # force: force (re)installation, even if twiki/ directory is already present
 # perl: name of perl executable (autodetected, but can be manually overridden)
-# kernel: name of kernel to install (eg, TWikiKernelDEVELOP7684)
+# kernel: name of kernel to install (eg, FoswikiKernelDEVELOP7684)
 # extension: name of extensions to install (BlogPlugin, ImageGalleryPlugin, PublishContrib)
-# TWikiFor: 
+# FoswikiFor: 
 #
 # TODO parameters:
 # from http://twiki.org/cgi-bin/view/Sandbox/WillNorrisSandbox?DOMAIN=admin.langalot.com&TWIKI_URL_PATH_DIR=twiki&USER=wn&DEFAULT_WEB=&ADMIN=webmaster&install_type=svn_main
@@ -53,12 +53,12 @@ use warnings;
 # installation from local copies (in progress tmp/downloads/distros/)
 #
 # administrator ($twikiAdmin)
-#	(and update Main.TWikiAdminGroup)
+#	(and update Main.AdminGroup)
 # wikiwebmaster (for email about this wiki site) - 
-#	(and update TWiki.MainPreferences) - $wikiWebMaster
+#	(and update System.MainPreferences) - $wikiWebMaster
 #
 # other TODO?
-# 	could create a TWikiInstallationReport topic...
+# 	could create a FoswikiInstallationReport topic...
 #
 # DONE
 # move 'configure & select individual components' checkbox to after we even know if there are any
@@ -76,17 +76,16 @@ use FindBin;
 use File::Basename qw( basename );
 use Cwd qw( abs_path );
 use English;
-#use WWW::Mechanize::TWiki 0.08;
 #use Error qw( :try );
 use CGI::Ajax;
 
 my $q = CGI::new() or die $!;
 # object data
 my $LocalSiteCfg;
-my $twikiAdmin = $q->param('TWikiAdmin') || '';
+my $foswikiAdmin = $q->param('FoswikiAdmin') || '';
 my $WebMasterEmail = $q->param('WebMasterEmail') || $ENV{SERVER_ADMIN} || "webmaster\@$ENV{HTTP_HOST}";
-my $TWikiFor = $q->param('TWikiFor');
-#my $TWikiFor = $q->param('TWikiFor') || 'http://localhost/~twikibuilder/twiki.org.zip';
+my $FoswikiFor = $q->param('FoswikiFor');
+#my $FoswikiFor = $q->param('FoswikiFor') || 'http://localhost/~twikibuilder/twiki.org.zip';
 my $perl = $q->param( 'perl' ) || $EXECUTABLE_NAME;
 my $jsInstallButton = jsInstallButton();
 
@@ -97,11 +96,11 @@ print $q->header(),
 		    -BGCOLOR => '#f4c000',
 		    -head => [ map { 
 			       Link({-rel => $_,
-				     -href => 'http://twiki.biohack.net/pub/TWikiInstallerContrib/favicon.ico',
+				     -href => 'http://foswiki.biohack.net/pub/FoswikiWebBasedInstaller/favicon.ico',
 				     -type => "image/x-icon"}) } ( 'icon', 'shortcut icon' )
 			       ],
 		    -style => {
-			-src => [ map { "http://twiki.biohack.net/pub/TWikiInstallerContrib/$_.css" } qw( reset styles ) ],
+			-src => [ map { "http://foswiki.biohack.net/pub/FoswikiWebBasedInstaller/$_.css" } qw( reset styles ) ],
 		     },
 		    -onload => "expand_collapse_repositories('foswiki.org'); checkEnableInstallButton(event);",
 		    -onkeyup => "checkEnableInstallButton(event)",
@@ -135,7 +134,7 @@ my $localDirConfig = {
     };
 
 # inversion duplication from above (mostly)
-my $mapTWikiDirs = {
+my $mapFoswikiDirs = {
     lib       => { perms => 0440, dest => "$twikiDir/lib", },
     pub       => { perms => 0660, dest => $localDirConfig->{PubDir}, },
     data      => { perms => 0660, dest => $localDirConfig->{DataDir}, },
@@ -149,7 +148,7 @@ my $mapTWikiDirs = {
 #twikiplugins
 };
 
-unless ( $TWikiFor )
+unless ( $FoswikiFor )
 {
     print twikiForMenu( $q ), $q->end_html;
     exit 0;
@@ -182,8 +181,8 @@ print "<h1>Installing...</h1>\n";
 
 my $archive_file = 'install.zip';
 unless ( -e $archive_file ) {
-    print STDERR "downloading $TWikiFor\n";
-    my ( $tar, $error ) = getUrl({ url => $TWikiFor, outfile => $archive_file });
+    print STDERR "downloading $FoswikiFor\n";
+    my ( $tar, $error ) = getUrl({ url => $FoswikiFor, outfile => $archive_file });
     die $error if $error;
 
     open( TAR, '>', $archive_file ) or die $!;
@@ -200,11 +199,11 @@ $q->param( kernel => $archive_file );
 -d $twikiDir || mkpath $twikiDir or die qq{Couldn't create "$twikiDir" to install into!};
 # chmod g+w $twikiDir (?)
 
-InstallTWikiExtension( "$archive_file" );
+InstallFoswikiExtension( "$archive_file" );
 
 ################################################################################
 # LocalLib.cfg
-my $fnLocalLibCfg = "$mapTWikiDirs->{bin}->{dest}/LocalLib.cfg";
+my $fnLocalLibCfg = "$mapFoswikiDirs->{bin}->{dest}/LocalLib.cfg";
 open( FH, '>', $fnLocalLibCfg ) or die "Can't open $fnLocalLibCfg: $!";
 print FH <<'__LOCALLIB_CFG__';
 use vars qw( $twikiLibPath );
@@ -218,18 +217,18 @@ close( FH ) or die "Can't close $fnLocalLibCfg: $! ???";
 # LocalSite.cfg
 
 foreach my $plugin ( sort { lc $a cmp lc $b } keys %installedPlugins ) {
-    $LocalSiteCfg .= "\$TWiki::cfg{Plugins}{$plugin}{Enabled} = 1;\n";
+    $LocalSiteCfg .= "\$Foswiki::cfg{Plugins}{$plugin}{Enabled} = 1;\n";
 }
 
 $LocalSiteCfg .= <<__LOCALSITE_CFG__;
 #===============================================================================
-\$TWiki::cfg{AutoAttachPubFiles} = 1;
-\$TWiki::cfg{EnableHierarchicalWebs} = 1;
-\$TWiki::cfg{LoginManager} = 'TWiki::Client::TemplateLogin';
-\$TWiki::cfg{UserInterfaceInternationalisation} = 1;
-#\$TWiki::cfg{WarningsAreErrors} = 1;
+\$Foswiki::cfg{AutoAttachPubFiles} = 1;
+\$Foswiki::cfg{EnableHierarchicalWebs} = 1;
+\$Foswiki::cfg{LoginManager} = 'Foswiki::Client::TemplateLogin';
+\$Foswiki::cfg{UserInterfaceInternationalisation} = 1;
+#\$Foswiki::cfg{WarningsAreErrors} = 1;
 # SMELL: blech, temp hack
-\$TWiki::cfg{Site}{CharSet} = 'iso-8859-15';
+\$Foswiki::cfg{Site}{CharSet} = 'iso-8859-15';
 #===============================================================================
 __LOCALSITE_CFG__
 
@@ -239,11 +238,11 @@ foreach my $localSiteEntry ( qw( DefaultUrlHost ScriptUrlPath ScriptSuffix PubUr
     $localDirConfig->{ $localSiteEntry } = abs_path( $localDirConfig->{ $localSiteEntry } ) 
 	if $localSiteEntry =~ /Dir$/;
 
-    $LocalSiteCfg .= qq{\$TWiki::cfg{$localSiteEntry} = "$localDirConfig->{$localSiteEntry}";\n};
+    $LocalSiteCfg .= qq{\$Foswiki::cfg{$localSiteEntry} = "$localDirConfig->{$localSiteEntry}";\n};
 }
 
 # write out LocalSite.cfg
-my $fnLocalSiteCfg = "$mapTWikiDirs->{lib}->{dest}/LocalSite.cfg";
+my $fnLocalSiteCfg = "$mapFoswikiDirs->{lib}->{dest}/LocalSite.cfg";
 open( FH, '>', $fnLocalSiteCfg ) or die "Can't open $fnLocalSiteCfg: $!";
 print FH $LocalSiteCfg;
 close( FH ) or die "Can't close $fnLocalSiteCfg: $! ???";
@@ -356,27 +355,27 @@ $BinHtAccess .= "    AuthUserFile $localDirConfig->{DataDir}/.htpasswd\n";
 $BinHtAccess .= <<EOT;
     AuthName 'Enter your WikiName: (First name and last name, no space, no dots, capitalized, e.g. JohnSmith). Cancel to register if you do not have one.'
     AuthType Basic
-    ErrorDocument 401 /twiki/bin/view$scriptSuffix/TWiki/TWikiRegistration
+    ErrorDocument 401 /foswiki/bin/view$scriptSuffix/System/UserRegistration
 </FilesMatch>
 EOT
 
 # SMELL: calculate ErrorDocument URL
 
-#print STDERR "mtw/b: ", $mapTWikiDirs->{bin}->{dest}, "\n";
-open( HTACCESS, '>', $mapTWikiDirs->{bin}->{dest} . '/.htaccess' ) or warn $!;
+#print STDERR "mtw/b: ", $mapFoswikiDirs->{bin}->{dest}, "\n";
+open( HTACCESS, '>', $mapFoswikiDirs->{bin}->{dest} . '/.htaccess' ) or warn $!;
 print HTACCESS $BinHtAccess, "\n";
-print HTACCESS "ErrorDocument 401 bin/view$scriptSuffix/TWiki/TWikiRegistration\n";
+print HTACCESS "ErrorDocument 401 bin/view$scriptSuffix/System/UserRegistration\n";
 close HTACCESS;
 
 #print STDERR ".htaccess for [$abs_dir]\n";
-my $pub_dir = $mapTWikiDirs->{pub}->{dest};
+my $pub_dir = $mapFoswikiDirs->{pub}->{dest};
 open( HTACCESS, '>', "$pub_dir/.htaccess" ) or warn $!;
 print HTACCESS "SetHandler none\n";
 close HTACCESS;
 
 #foreach my $dir qw( pub/Trash data lib locale logs templates test tools twikiplugins ) {
 foreach my $dir ( my @dist = qw( data lib locale templates ), my @devel = qw( logs test tools twikiplugins ) ) {
-    my $abs_dir = $mapTWikiDirs->{$dir}->{dest} || "$twikiDir/$dir";
+    my $abs_dir = $mapFoswikiDirs->{$dir}->{dest} || "$twikiDir/$dir";
     print STDERR ".htaccess for [$abs_dir]\n";
     if ( open( HTACCESS, '>', "$abs_dir/.htaccess" ) ) {
 	print HTACCESS "Deny from all\n";
@@ -399,13 +398,13 @@ rmtree 'tmp/';
 
 # parameters
 # module: module filename relative to components (eg, kernels/TWikiDEVELOP6666.zip or extension/BlogPlugin.zip)
-sub InstallTWikiExtension {
+sub InstallFoswikiExtension {
     my ( $module ) = @_;
 
-    my ( $text, $success, $plugins ) = TWiki::Contrib::TWikiInstallerContrib::_InstallTWikiExtension({ 
+    my ( $text, $success, $plugins ) = Foswiki::Contrib::FoswikiInstallerContrib::_InstallFoswikiExtension({ 
 	module => $module,
 	tmpInstall => $tmpInstall,
-	mapTWikiDirs => $mapTWikiDirs,
+	mapFoswikiDirs => $mapFoswikiDirs,
 	localDirConfig => $localDirConfig,
     });
 #    print $q->li( @$text );
@@ -446,7 +445,7 @@ __JAVASCRIPT__
 <div class=repositoryName onclick="expand_collapse_repositories('$rep')" ><img src="$favicon" width="16" height="16" /> $rep</div>
 <div name="repository_files" id="$rep"><ul>};
 	foreach my $twikifor ( @{$repository->{$rep}} ) {
-	    $text .= q{<li><a href="javascript:()" onclick="document.getElementById('TWikiFor').value = } . qq{'$twikifor->{url}'" >$twikifor->{url}</a></li>};
+	    $text .= q{<li><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = } . qq{'$twikifor->{url}'" >$twikifor->{url}</a></li>};
 	}
 	$text .= "</div></ul></div>";
     }
@@ -471,10 +470,10 @@ my $repository = {
     'foswiki.org' => [
 		      ],
     'twiki.org' => [
-		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.2.4.zip', },
+#		    { url => 'http://twiki.org/p/pub/Codev/Release/TWiki-4.2.4.zip', },
     ],
-    'twiki.biohack.net' => [
-#		      { url => 'http://twiki.biohack.net/pub/twiki/TWiki-SVN-MAIN.zip', },
+    'foswiki.biohack.net' => [
+#		      { url => 'http://foswiki.biohack.net/pub/twiki/TWiki-SVN-MAIN.zip', },
 		      ],
     'wikiring.de' => [
 		       ],
@@ -495,8 +494,8 @@ my $repository = {
 
     my ( $twikiUrl ) = $ENV{SCRIPT_URI} =~ m|^(.*/)|;
 
-    my $strHtmlForceInstallation = isTWikiAlreadyInstalled() ?
-	'<input type=checkbox name=force_installation id=force_installation> <b><a href="bin/view' . $scriptSuffix . '/TWiki/InstalledPlugins">Existing TWiki installation</a> detected.</b> Allow forced installation by overwriting files.<br/>' : '';
+    my $strHtmlForceInstallation = isFoswikiAlreadyInstalled() ?
+	'<input type=checkbox name=force_installation id=force_installation> <b><a href="bin/view' . $scriptSuffix . '/System/InstalledPlugins">Existing Foswiki installation</a> detected.</b> Allow forced installation by overwriting files.<br/>' : '';
 
     $text .= qq{
 <div id="container"><a id="topofpage"></a><div class="section">
@@ -518,9 +517,9 @@ The Foswiki Installer will install a Foswiki release to<br />
 <!--==========================================================================================-->
 <fieldset><legend>1. Choose a Foswiki Release</legend>
 
-Foswiki release to install <input type="text" name="TWikiFor" id="TWikiFor" value="http://fosiki.com/Foswiki_trunk/http://fosiki.com/Foswiki_trunk/FoswikiCore.zip" size="50" />
-<div class=help id="TWikiFor_help" >Select a TWiki release from the list below <i>or</i> enter a URL manually
-<!-- By the way, this should also be able to install TWiki extensions -->
+Foswiki release to install <input type="text" name="FoswikiFor" id="FoswikiFor" value="http://fosiki.com/Foswiki_trunk/http://fosiki.com/Foswiki_trunk/FoswikiCore.zip" size="50" />
+<div class=help id="FoswikiFor_help" >Select a Foswiki release from the list below <i>or</i> enter a URL manually
+<!-- By the way, this should also be able to install Foswiki extensions -->
 </div>
 }
 
@@ -532,21 +531,21 @@ qq{</fieldset>
 <fieldset><legend>2. Set Foswiki Settings</legend>
 <div id=configure><fieldset id=configure><legend>configure</legend>
 username <input $htpasswd_avail type=text name=configure_admin id=configure_admin value='wikimaster' /><br />
-<div class=help id=configure_admin_help>This is the account name to allow access to TWiki's system configuration<br/></div>
+<div class=help id=configure_admin_help>This is the account name to allow access to Foswiki's system configuration<br/></div>
 password <input $htpasswd_avail type=password name=configure_password id=configure_password /><br />
 <div class=help id=configure_password_help>Be sure to pick a secure password!<br/></div>
 password (again) $htpasswd_avail <input type=password name=configure_password2 id=configure_password2 /> <span id=password_mismatch></span><br/>
 <div class=help id=configure_password2_help>Verify your password<br/></div></fieldset></div>
 
-<b>TWikiAdmin</b> <input type="text" name="TWikiAdmin" id="TWikiAdmin" size="35" value="$twikiAdmin" /><br />
-<div class=help id=TWikiAdmin_help>This TWiki account will be created and added to the <a target="_new" href="http://twiki.org/cgi-bin/view/TWiki/TWikiAccessControl#The_Super_Admin_Group">TWikiAdminGroup</a>. 
+<b>FoswikiAdmin</b> <input type="text" name="FoswikiAdmin" id="FoswikiAdmin" size="35" value="$foswikiAdmin" /><br />
+<div class=help id=FoswikiAdmin_help>This Foswiki account will be created and added to the <a target="_new" href=http://trunk.foswiki.org/System/AccessControl#The_Super_Admin_Group">AdminGroup</a>. 
 A password will be automatically generated and sent to the email specified by WebMasterEmail below<br/></div>
 
 <b>WebMasterEmail</b> <input type="text" name="WebMasterEmail" id=WebMasterEmail value="$WebMasterEmail" size="35" /><br />
-<div class=help id=WebMasterEmail_help>This will automatically set the TWiki webmaster email address <a target="_new" href="http://twiki.org/cgi-bin/view/TWiki/TWikiPreferences#Email_and_Proxy_Server_Settings">WebMasterEmail</a> <!-- in Main.TWikiPreferences --><br/></div>
+<div class=help id=WebMasterEmail_help>This will automatically set the Foswiki webmaster email address <a target="_new" href="http://trunk.foswiki.org/System/DefaultPreferences#Email_and_Proxy_Server_Settings">WebMasterEmail</a> <!-- in Main.SitePreferences --><br/></div>
 
 <!--
-<b>WebMasterEmailNAME</b> <input type="text" name="WebMasterEmailNAME" value="TWiki Administrator" size="35" /><br />
+<b>WebMasterEmailNAME</b> <input type="text" name="WebMasterEmailNAME" value="Foswiki Administrator" size="35" /><br />
 <br/>
 -->
 
@@ -579,7 +578,7 @@ After the installation, you can start using the wiki right away or configure it 
 
 ################################################################################
 
-    $text .= $q->hidden( -name => 'TWikiFor', -value => $q->param('TWikiFor') );
+    $text .= $q->hidden( -name => 'FoswikiFor', -value => $q->param('FoswikiFor') );
 
 ################################################################################
 
@@ -627,7 +626,7 @@ sub installationMenu {
     my $text = '';
 
     $text .= $q->start_form
-	. $q->hidden( -name => 'TWikiFor', -value => $q->param('TWikiFor') )
+	. $q->hidden( -name => 'FoswikiFor', -value => $q->param('FoswikiFor') )
 	. $q->hidden( -name => 'force', -value => $q->param('force') )
 	. $q->submit( -name => 'install', -value => 'Install' );
 
@@ -649,8 +648,8 @@ sub installationMenu {
 				   . $q->a( { -href => "http://www.daemoninc.com/SpeedyCGI/" }, 'SpeedyCGI' ) . ')'
 				   )
 		      . $q->br
-		      . $q->b( 'TWikiAdmin' ) . ': '
-		      . $q->textfield( -name => 'TWikiAdmin', -default => $twikiAdmin, -size => 25 )
+		      . $q->b( 'FoswikiAdmin' ) . ': '
+		      . $q->textfield( -name => 'FoswikiAdmin', -default => $foswikiAdmin, -size => 25 )
 		      . $q->br
 		      . $q->b( 'WebMasterEmail' ) . ': '
 		      . $q->textfield( -name => 'WebMasterEmail', -default => $WebMasterEmail, -size => 25 )
@@ -682,7 +681,7 @@ sub installationMenu {
 ################################################################################
 # already installed?
 ################################################################################
-sub isTWikiAlreadyInstalled
+sub isFoswikiAlreadyInstalled
 {
     return -e "$FindBin::Bin/bin/LocalLib.cfg";
 }
@@ -692,11 +691,11 @@ sub isTWikiAlreadyInstalled
 sub continueToWikiUrl
 {
     # TODO: need URI for "view"
-    do "lib/TWiki.cfg";
+    do "lib/Foswiki.cfg";
     do "lib/LocalSite.cfg";
-    my $url = $TWiki::cfg{DefaultUrlHost} . $TWiki::cfg{ScriptUrlPath} 
-    . '/view'.$TWiki::cfg{ScriptSuffix}
-    . '/TWiki/InstalledPlugins';
+    my $url = $Foswiki::cfg{DefaultUrlHost} . $Foswiki::cfg{ScriptUrlPath} 
+    . '/view'.$Foswiki::cfg{ScriptSuffix}
+    . '/System/InstalledPlugins';
 
     return $url;
 }
@@ -706,9 +705,9 @@ sub continueToWikiUrl
 sub continueToConfigureUrl
 {
     # TODO: need URI for "view"
-    do "lib/TWiki.cfg";
+    do "lib/Foswiki.cfg";
     do "lib/LocalSite.cfg";
-    my $url = $TWiki::cfg{DefaultUrlHost} . $TWiki::cfg{ScriptUrlPath} . '/configure';
+    my $url = $Foswiki::cfg{DefaultUrlHost} . $Foswiki::cfg{ScriptUrlPath} . '/configure';
 
     return $url;
 }
@@ -724,7 +723,7 @@ function checkEnableInstallButton(e) {
 	
 	var disabled = false;
 	
-	var required_fields = [ 'TWikiFor', 'configure_admin', 'configure_password', 'configure_password2', 'WebMasterEmail', 'TWikiAdmin', 'perl', 'force_installation' ];
+	var required_fields = [ 'FoswikiFor', 'configure_admin', 'configure_password', 'configure_password2', 'WebMasterEmail', 'FoswikiAdmin', 'perl', 'force_installation' ];
 	for ( i=0; i<required_fields.length; ++i ) {
 		var field = required_fields[i];
 		var el = document.getElementById( field );
@@ -798,7 +797,7 @@ sub getUrl
 #    my $url = $p->{url} or die qq{required parameter "url" not specified};
 #
 #    my $ua = LWP::UserAgent->new() or die $!;
-#    $ua->agent( "TWiki remote installer v0.0.1" );
+#    $ua->agent( "Foswiki remote installer v0.0.1" );
 #    my $req = HTTP::Request->new( GET => $url );
 #    # TODO: what about http vs. https ?
 #    die unless $req;
@@ -822,7 +821,7 @@ sub getUrl
 use strict;
 ++$|;
 
-package TWiki::Contrib::TWikiInstallerContrib;
+package Foswiki::Contrib::FoswikiInstallerContrib;
 
 use vars qw( $VERSION );
 $VERSION = '$Rev$';
@@ -842,11 +841,11 @@ use Data::Dumper qw( Dumper );
 
 # parameters
 # module: module filename relative to components (eg, kernels/TWikiDEVELOP6666.zip or extension/BlogPlugin.zip)
-sub _InstallTWikiExtension {
+sub _InstallFoswikiExtension {
     my ( $p ) = @_;
     my $tmpInstall = $p->{tmpInstall} or die "tmpInstall";
     my $module = $p->{module} or die "module";
-    my $mapTWikiDirs = $p->{mapTWikiDirs} or die "mapTWikiDirs";
+    my $mapFoswikiDirs = $p->{mapFoswikiDirs} or die "mapFoswikiDirs";
     my $localDirConfig = $p->{localDirConfig} or die "localDirConfig";
     my $perl = $p->{perl} || $EXECUTABLE_NAME;
 
@@ -865,7 +864,7 @@ sub _InstallTWikiExtension {
     my ( $name ) = ( basename $module ) =~ /(.*)\./;
     die "name is tainted" if tainted $name;
 
-    print STDERR "TWikiInstallerContrib: Installing $name\n";
+    print STDERR "FoswikiWebBasedInstaller: Installing $name\n";
     my $q = CGI->new() or die $!;
     push @text, $q->b( $name );
 
@@ -880,7 +879,7 @@ sub _InstallTWikiExtension {
 	# TODO: rename $base to something more descriptive (like ...?)
 	next unless my ($path,$base) = $file =~ m|^([^/]+)(/.*)$|;
 
-	my $map = $mapTWikiDirs->{$path} or warn "no mapping for [$path]", next;
+	my $map = $mapFoswikiDirs->{$path} or warn "no mapping for [$path]", next;
 	my $dirDest = $map->{dest} or die "no destination directory for [$path] " . Dumper( $map );
 
 	# handle directories (path ends with /?, if so, mirror directory structure)
@@ -894,7 +893,7 @@ sub _InstallTWikiExtension {
 	chmod $map->{perms}, $destFile if $map->{perms};
 
 	# only Plugins have to be enabled (i.e., Contribs and Skins are "always on")
-	if ( my ( $plugin ) = $file =~ m|^lib/TWiki/Plugins/(.+Plugin).pm$| ) {
+	if ( my ( $plugin ) = $file =~ m|^lib/Foswiki/Plugins/(.+Plugin).pm$| ) {
 	    ++$plugins->{$plugin};
 	}
 
