@@ -16,7 +16,7 @@ SetHandler cgi-script
 
 * AND THEN REFRESH THIS PAGE
 ________________________________________________________________________________
-# Copyright 2004,2005,2007 Will Norris.  All Rights Reserved.
+# Copyright 2004,2005,2007,2009 Will Norris.  All Rights Reserved.
 
 
 
@@ -445,7 +445,7 @@ __JAVASCRIPT__
 <div class=repositoryName onclick="expand_collapse_repositories('$rep')" ><img src="$favicon" width="16" height="16" /> $rep</div>
 <div name="repository_files" id="$rep"><ul>};
 	foreach my $foswikifor ( @{$repository->{$rep}} ) {
-	    $text .= q{<li><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = } . qq{'$foswikifor->{url}'" >$foswikifor->{url}</a></li>};
+	    $text .= q{<li class="distro"><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = } . qq{'$foswikifor->{url}'" >$foswikifor->{url}</a></li>};
 	}
 	$text .= "</div></ul></div>";
     }
@@ -463,7 +463,7 @@ sub foswikiForMenu {
 
 my $repository = {
     'Nightly Builds' => [
-			 { url => 'http://fosiki.com/Foswiki_trunk/http://fosiki.com/Foswiki_trunk/FoswikiCore.zip',
+			 { url => 'http://fosiki.com/Foswiki_trunk/FoswikiCore.zip',
 			   favicon => 'http://fosiki.com/favicon.ico',
 		       },
 			 ],
@@ -502,7 +502,7 @@ my $repository = {
 <!--==========================================================================================-->
 <div id="header"><!-- header image --></div>
 <h1>Foswiki Installer</h1>
-The Foswiki Installer will install a Foswiki release to<br /> 
+You are about to install Foswiki to<br /> 
 <div id=foswikiUrl><big>$foswikiUrl</big></div>
 <div class=note>If this is not the desired URL, move this script to the correct directory and load the page in the browser from the new location.</div>
 <!--
@@ -517,7 +517,7 @@ The Foswiki Installer will install a Foswiki release to<br />
 <!--==========================================================================================-->
 <fieldset><legend>1. Choose a Foswiki Release</legend>
 
-Foswiki release to install <input type="text" name="FoswikiFor" id="FoswikiFor" value="http://fosiki.com/Foswiki_trunk/http://fosiki.com/Foswiki_trunk/FoswikiCore.zip" size="50" />
+Foswiki release to install <input type="text" name="FoswikiFor" id="FoswikiFor" value="http://fosiki.com/Foswiki_trunk/FoswikiCore.zip" size="50" />
 <div class=help id="FoswikiFor_help" >Select a Foswiki release from the list below <i>or</i> enter a URL manually
 <!-- By the way, this should also be able to install Foswiki extensions -->
 </div>
@@ -564,7 +564,7 @@ After the installation, you can start using the wiki right away or configure it 
 
 </div>
 <!--==========================================================================================-->
-<!-- <div class="footer">Copyright &copy; 2007 Will Norris. All Rights Reserved.</div> -->
+<!-- <div class="footer">Copyright &copy; 2007,2009 Will Norris. All Rights Reserved.</div> -->
 <!--==========================================================================================-->
 	</div>
 </div>
@@ -816,7 +816,7 @@ sub getUrl
 ################################################################################
 #!/usr/bin/perl -w
 # $Id: install_twiki.cgi 7202 2005-10-28 20:36:14Z WillNorris $
-# Copyright 2004,2005 Will Norris.  All Rights Reserved.
+# Copyright 2004,2005,2009 Will Norris.  All Rights Reserved.
 # License: GPL
 use strict;
 ++$|;
