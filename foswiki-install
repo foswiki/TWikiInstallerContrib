@@ -21,6 +21,36 @@ ________________________________________________________________________________
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # $Id: install_twiki.cgi 7202 2005-10-28 20:36:14Z WillNorris $
 # License: GPL
 use strict;
@@ -48,7 +78,7 @@ use warnings;
 # configure admin user and password (twice)
 # create useres 'properly'
 # directions to create .htaccess: "SetHandler cgi-script"
-# add repositories (first: http://twiki.org/p/pub/Codev/Release/TWiki-4.1.2.zip)
+# add repositories
 # add feedback (unzip progress meter or something)
 # installation from local copies (in progress tmp/downloads/distros/)
 #
@@ -67,6 +97,7 @@ use warnings;
 ################################################################################
 
 # References
+# http://trunk.foswiki.org/System/InstallationGuide
 # http://www.askthecssguy.com/2007/03/form_field_hints_with_css_and.html
 
 
@@ -80,7 +111,6 @@ use English;
 use CGI::Ajax;
 
 my $q = CGI::new() or die $!;
-# object data
 my $LocalSiteCfg;
 my $foswikiAdmin = $q->param('FoswikiAdmin') || '';
 my $WebMasterEmail = $q->param('WebMasterEmail') || $ENV{SERVER_ADMIN} || "webmaster\@$ENV{HTTP_HOST}";
@@ -130,7 +160,9 @@ my $localDirConfig = {
 	TemplateDir      => "$foswikiDir/templates",
 	DataDir          => "$foswikiDir/data",
 	LocalesDir       => "$foswikiDir/locale",
-	LogDir           => "$foswikiDir/data",	# ???
+	LogsDir          => "$foswikiDir/logs",
+	WorkingDir       => "$foswikiDir/working",
+#	ToolsDir         => "$foswiki/tools",
     };
 
 # inversion duplication from above (mostly)
@@ -141,10 +173,10 @@ my $mapFoswikiDirs = {
     templates => { perms => 0440, dest => $localDirConfig->{TemplateDir}, },
     bin       => { perms => 0550, dest => "$foswikiDir/bin", },
     locale    => { perms => 0440, dest => $localDirConfig->{LocalesDir}, },
-#    log => ?
-#logs
+    logs      => { perms => 0660, dest => "$foswikiDir/logs", },
+    working   => { perms => 0440, dest => "$foswikiDir/working", },
+#    tools     => { perms => 0, dest => "$foswikiDir/tools", }
 #test
-#tools
 #twikiplugins
 };
 
@@ -154,7 +186,11 @@ unless ( $FoswikiFor )
     exit 0;
 }
 
+################################################################################
+# INSTALL
+################################################################################
 my $tmpInstall = "$FindBin::Bin/tmp/install/";
+warn "tmpInstall=[$tmpInstall]\n";
 mkpath $tmpInstall or die $!;
 
 print qq{<div id="container"><a id="topofpage"></a><div class="section">\n};
@@ -199,7 +235,7 @@ $q->param( kernel => $archive_file );
 -d $foswikiDir || mkpath $foswikiDir or die qq{Couldn't create "$foswikiDir" to install into!};
 # chmod g+w $foswikiDir (?)
 
-InstallFoswikiExtension( "$archive_file" );
+InstallFoswikiExtension( $archive_file );
 
 ################################################################################
 # LocalLib.cfg
@@ -374,7 +410,7 @@ print HTACCESS "SetHandler none\n";
 close HTACCESS;
 
 #foreach my $dir qw( pub/Trash data lib locale logs templates test tools foswikiplugins ) {
-foreach my $dir ( my @dist = qw( data lib locale templates ), my @devel = qw( logs test tools foswikiplugins ) ) {
+foreach my $dir ( my @dist = qw( data lib locale logs templates working ), my @devel = qw( test tools foswikiplugins ) ) {
     my $abs_dir = $mapFoswikiDirs->{$dir}->{dest} || "$foswikiDir/$dir";
     print STDERR ".htaccess for [$abs_dir]\n";
     if ( open( HTACCESS, '>', "$abs_dir/.htaccess" ) ) {
@@ -445,7 +481,7 @@ __JAVASCRIPT__
 <div class=repositoryName onclick="expand_collapse_repositories('$rep')" ><img src="$favicon" width="16" height="16" /> $rep</div>
 <div name="repository_files" id="$rep"><ul>};
 	foreach my $foswikifor ( @{$repository->{$rep}} ) {
-	    $text .= q{<li class="distro"><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = } . qq{'$foswikifor->{url}'" >$foswikifor->{url}</a></li>};
+	    $text .= q{<li class="distro"><a href="#" onclick="document.getElementById('FoswikiFor').value = } . qq{'$foswikifor->{url}'" >$foswikifor->{url}</a></li>};
 	}
 	$text .= "</div></ul></div>";
     }
@@ -766,6 +802,7 @@ sub getUrl
 {
     my $p = shift;
 
+    my $error = 0;
     my ( $theHost, $theUrl ) = $p->{url} =~ m|http://(.*?)(/.*)|;
     my $thePort = 80;
     my $theHeader = '';
@@ -783,7 +820,12 @@ sub getUrl
     while( <SOCK> ) { $result .= $_; }
     close( SOCK )  or die "close: $!";
     select STDOUT;
-    return ( $result, 0 );
+    print STDERR "result=[$result]\n";
+    if ( $result =~ m{^HTTP/\d.\d (\d{3})} ) {
+	$error = $1;
+    }
+
+    return ( $result, $error );
 }
 
 ################################################################################
