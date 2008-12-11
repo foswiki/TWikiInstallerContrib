@@ -30,7 +30,7 @@ use warnings;
 
 ################################################################################
 # CGI parameters:
-# force: force (re)installation, even if twiki/ directory is already present
+# force: force (re)installation, even if foswiki/ directory is already present
 # perl: name of perl executable (autodetected, but can be manually overridden)
 # kernel: name of kernel to install (eg, FoswikiKernelDEVELOP7684)
 # extension: name of extensions to install (BlogPlugin, ImageGalleryPlugin, PublishContrib)
@@ -52,7 +52,7 @@ use warnings;
 # add feedback (unzip progress meter or something)
 # installation from local copies (in progress tmp/downloads/distros/)
 #
-# administrator ($twikiAdmin)
+# administrator ($foswikiAdmin)
 #	(and update Main.AdminGroup)
 # wikiwebmaster (for email about this wiki site) - 
 #	(and update System.MainPreferences) - $wikiWebMaster
@@ -111,10 +111,10 @@ print $q->header(),
 ################################################################################
 
 my %installedPlugins;	# which plugins get installed/are encountered
-my $twikiDir = $FindBin::Bin;
+my $foswikiDir = $FindBin::Bin;
 
-my ( $twikiPath ) = $ENV{SCRIPT_NAME} =~ m|(.*)/.*|;		# remove the script name from the path
-#print STDERR "twikiPath=[$twikiPath]\n";
+my ( $foswikiPath ) = $ENV{SCRIPT_NAME} =~ m|(.*)/.*|;		# remove the script name from the path
+#print STDERR "foswikiPath=[$foswikiPath]\n";
 
 # automatically detect required script suffix from this script's filename
 my ( $scriptSuffix ) = $ENV{SCRIPT_NAME} =~ m|.*/.*(\..*)$|;
@@ -123,23 +123,23 @@ $scriptSuffix ||= '';
 my $localDirConfig = {
     # SMELL: doesn't handle httpS --- what happened to $ENV{SCRIPT_URI} ???
 	DefaultUrlHost   => "http://$ENV{HTTP_HOST}" . ( $ENV{SERVER_PORT} != 80 && ":$ENV{SERVER_PORT}" || '' ),
-	ScriptUrlPath    => "$twikiPath/bin",
+	ScriptUrlPath    => "$foswikiPath/bin",
 	ScriptSuffix     => $scriptSuffix,
-	PubUrlPath       => "$twikiPath/pub",
-	PubDir           => "$twikiDir/pub",
-	TemplateDir      => "$twikiDir/templates",
-	DataDir          => "$twikiDir/data",
-	LocalesDir       => "$twikiDir/locale",
-	LogDir           => "$twikiDir/data",	# ???
+	PubUrlPath       => "$foswikiPath/pub",
+	PubDir           => "$foswikiDir/pub",
+	TemplateDir      => "$foswikiDir/templates",
+	DataDir          => "$foswikiDir/data",
+	LocalesDir       => "$foswikiDir/locale",
+	LogDir           => "$foswikiDir/data",	# ???
     };
 
 # inversion duplication from above (mostly)
 my $mapFoswikiDirs = {
-    lib       => { perms => 0440, dest => "$twikiDir/lib", },
+    lib       => { perms => 0440, dest => "$foswikiDir/lib", },
     pub       => { perms => 0660, dest => $localDirConfig->{PubDir}, },
     data      => { perms => 0660, dest => $localDirConfig->{DataDir}, },
     templates => { perms => 0440, dest => $localDirConfig->{TemplateDir}, },
-    bin       => { perms => 0550, dest => "$twikiDir/bin", },
+    bin       => { perms => 0550, dest => "$foswikiDir/bin", },
     locale    => { perms => 0440, dest => $localDirConfig->{LocalesDir}, },
 #    log => ?
 #logs
@@ -150,7 +150,7 @@ my $mapFoswikiDirs = {
 
 unless ( $FoswikiFor )
 {
-    print twikiForMenu( $q ), $q->end_html;
+    print foswikiForMenu( $q ), $q->end_html;
     exit 0;
 }
 
@@ -196,8 +196,8 @@ $q->param( kernel => $archive_file );
 ################################################################################
 # do the INSTALLATION
 
--d $twikiDir || mkpath $twikiDir or die qq{Couldn't create "$twikiDir" to install into!};
-# chmod g+w $twikiDir (?)
+-d $foswikiDir || mkpath $foswikiDir or die qq{Couldn't create "$foswikiDir" to install into!};
+# chmod g+w $foswikiDir (?)
 
 InstallFoswikiExtension( "$archive_file" );
 
@@ -206,9 +206,9 @@ InstallFoswikiExtension( "$archive_file" );
 my $fnLocalLibCfg = "$mapFoswikiDirs->{bin}->{dest}/LocalLib.cfg";
 open( FH, '>', $fnLocalLibCfg ) or die "Can't open $fnLocalLibCfg: $!";
 print FH <<'__LOCALLIB_CFG__';
-use vars qw( $twikiLibPath );
+use vars qw( $foswikiLibPath );
 use Cwd qw( abs_path );
-( $twikiLibPath ) = ($twikiLibPath = Cwd::abs_path( 'lib' )) =~ /(.*)/;
+( $foswikiLibPath ) = ($foswikiLibPath = Cwd::abs_path( 'lib' )) =~ /(.*)/;
 1;
 __LOCALLIB_CFG__
 close( FH ) or die "Can't close $fnLocalLibCfg: $! ???";
@@ -373,9 +373,9 @@ open( HTACCESS, '>', "$pub_dir/.htaccess" ) or warn $!;
 print HTACCESS "SetHandler none\n";
 close HTACCESS;
 
-#foreach my $dir qw( pub/Trash data lib locale logs templates test tools twikiplugins ) {
-foreach my $dir ( my @dist = qw( data lib locale templates ), my @devel = qw( logs test tools twikiplugins ) ) {
-    my $abs_dir = $mapFoswikiDirs->{$dir}->{dest} || "$twikiDir/$dir";
+#foreach my $dir qw( pub/Trash data lib locale logs templates test tools foswikiplugins ) {
+foreach my $dir ( my @dist = qw( data lib locale templates ), my @devel = qw( logs test tools foswikiplugins ) ) {
+    my $abs_dir = $mapFoswikiDirs->{$dir}->{dest} || "$foswikiDir/$dir";
     print STDERR ".htaccess for [$abs_dir]\n";
     if ( open( HTACCESS, '>', "$abs_dir/.htaccess" ) ) {
 	print HTACCESS "Deny from all\n";
@@ -444,8 +444,8 @@ __JAVASCRIPT__
 	$text .= qq{<div class=repository>
 <div class=repositoryName onclick="expand_collapse_repositories('$rep')" ><img src="$favicon" width="16" height="16" /> $rep</div>
 <div name="repository_files" id="$rep"><ul>};
-	foreach my $twikifor ( @{$repository->{$rep}} ) {
-	    $text .= q{<li><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = } . qq{'$twikifor->{url}'" >$twikifor->{url}</a></li>};
+	foreach my $foswikifor ( @{$repository->{$rep}} ) {
+	    $text .= q{<li><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = } . qq{'$foswikifor->{url}'" >$foswikifor->{url}</a></li>};
 	}
 	$text .= "</div></ul></div>";
     }
@@ -457,7 +457,7 @@ __JAVASCRIPT__
 
 # parameters
 # cgi: 
-sub twikiForMenu {
+sub foswikiForMenu {
     my $q = shift or die "no cgi?";
     my $text = '';
 
@@ -492,7 +492,7 @@ my $repository = {
 #    my $htpasswd_avail = $? == -1 ? ' disabled=disabled ' : '';
     my $htpasswd_avail = '';
 
-    my ( $twikiUrl ) = $ENV{SCRIPT_URI} =~ m|^(.*/)|;
+    my ( $foswikiUrl ) = $ENV{SCRIPT_URI} =~ m|^(.*/)|;
 
     my $strHtmlForceInstallation = isFoswikiAlreadyInstalled() ?
 	'<input type=checkbox name=force_installation id=force_installation> <b><a href="bin/view' . $scriptSuffix . '/System/InstalledPlugins">Existing Foswiki installation</a> detected.</b> Allow forced installation by overwriting files.<br/>' : '';
@@ -503,7 +503,7 @@ my $repository = {
 <div id="header"><!-- header image --></div>
 <h1>Foswiki Installer</h1>
 The Foswiki Installer will install a Foswiki release to<br /> 
-<div id=twikiUrl><big>$twikiUrl</big></div>
+<div id=foswikiUrl><big>$foswikiUrl</big></div>
 <div class=note>If this is not the desired URL, move this script to the correct directory and load the page in the browser from the new location.</div>
 <!--
 <ol>
@@ -555,7 +555,7 @@ A password will be automatically generated and sent to the email specified by We
 <!--==========================================================================================-->
 <fieldset><legend>3. Install Foswiki!</legend>
 $strHtmlForceInstallation
-<input type="submit" name="install" id="install" value="Install" /> to $twikiDir <br />
+<input type="submit" name="install" id="install" value="Install" /> to $foswikiDir <br />
 </fieldset>
 <!--==========================================================================================-->
 After the installation, you can start using the wiki right away or configure it in more detail.
