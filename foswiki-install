@@ -219,7 +219,7 @@ my $archive_file = 'install.zip';
 unless ( -e $archive_file ) {
     print STDERR "downloading $FoswikiFor\n";
     my ( $tar, $error ) = getUrl({ url => $FoswikiFor, outfile => $archive_file });
-    die $error if $error;
+    die "$error: $FoswikiFor\n" if $error;
 
     open( TAR, '>', $archive_file ) or die $!;
     binmode( TAR );
@@ -269,7 +269,7 @@ $LocalSiteCfg .= <<__LOCALSITE_CFG__;
 __LOCALSITE_CFG__
 
 # generate LocalSite.cfg entries for variable entries (url/path,...)
-foreach my $localSiteEntry ( qw( DefaultUrlHost ScriptUrlPath ScriptSuffix PubUrlPath PubDir TemplateDir DataDir LogDir LocalesDir ) ) {
+foreach my $localSiteEntry ( qw( DefaultUrlHost ScriptUrlPath ScriptSuffix PubUrlPath PubDir TemplateDir DataDir LogsDir LocalesDir ) ) {
     # normalise pathnames (entries ending in ...Dir) (Sandbox.pm doesn't like .. in pathnames!)
     $localDirConfig->{ $localSiteEntry } = abs_path( $localDirConfig->{ $localSiteEntry } ) 
 	if $localSiteEntry =~ /Dir$/;
@@ -797,6 +797,7 @@ function checkEnableInstallButton(e) {
 
 ################################################################################
 
+if ( 0 ) {
 use Socket;
 sub getUrl
 {
@@ -809,6 +810,7 @@ sub getUrl
 
     my $result = '';
     my $req = "GET $theUrl HTTP/1.0\r\n$theHeader\r\n\r\n";
+    warn "req=[$req]";
     my ( $iaddr, $paddr, $proto );
     $iaddr   = inet_aton( $theHost );
     $paddr   = sockaddr_in( $thePort, $iaddr );
@@ -827,28 +829,29 @@ sub getUrl
 
     return ( $result, $error );
 }
+}
 
 ################################################################################
 
 # url: 
-#use LWP::UserAgent;
-#use HTTP::Request;
-#use HTTP::Response;
-#sub getUrl {
-#    my ( $p ) = @_;
-#    my $url = $p->{url} or die qq{required parameter "url" not specified};
-#
-#    my $ua = LWP::UserAgent->new() or die $!;
-#    $ua->agent( "Foswiki remote installer v0.0.1" );
-#    my $req = HTTP::Request->new( GET => $url );
-#    # TODO: what about http vs. https ?
-#    die unless $req;
-#    $req->referer( "$ENV{SERVER_NAME}:$ENV{SERVER_PORT}$ENV{SCRIPT_NAME}" );
-#    my $response = $ua->request($req);
-#    die if $response->is_error();
-#
-#    return $response->is_error() ? ( undef, $response->status_line ) : ( $response->content(), '' );
-#}
+use LWP::UserAgent;
+use HTTP::Request;
+use HTTP::Response;
+sub getUrl {
+    my ( $p ) = @_;
+    my $url = $p->{url} or die qq{required parameter "url" not specified};
+
+    my $ua = LWP::UserAgent->new() or die $!;
+    $ua->agent( "Foswiki remote installer v0.0.1" );
+    my $req = HTTP::Request->new( GET => $url );
+    # TODO: what about http vs. https ?
+    die unless $req;
+    $req->referer( "$ENV{SERVER_NAME}:$ENV{SERVER_PORT}$ENV{SCRIPT_NAME}" );
+    my $response = $ua->request($req);
+    die if $response->is_error();
+
+    return $response->is_error() ? ( undef, $response->status_line ) : ( $response->content(), '' );
+}
 
 ################################################################################
 ################################################################################
