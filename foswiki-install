@@ -286,10 +286,10 @@ close( FH ) or die "Can't close $fnLocalSiteCfg: $! ???";
 
 ################################################################################
 # setup configure
-if ( $q->param( 'configure_admin' ) ) {
+if ( $q->param( 'configure_username' ) ) {
     my $htpasswd_file = $localDirConfig->{DataDir}.'/.htpasswd';
     print STDERR "configure_password: [", $q->param('configure_password'), "]\n";
-    my $htpasswd_params = ( -e $htpasswd_file ? '' : '-c ' ) . "-b $htpasswd_file " . $q->param('configure_admin') . ' ' . $q->param('configure_password');
+    my $htpasswd_params = ( -e $htpasswd_file ? '' : '-c ' ) . "-b $htpasswd_file " . $q->param('configure_username') . ' ' . $q->param('configure_password');
     print STDERR "running htpasswd: [$htpasswd_params]\n";
     `htpasswd $htpasswd_params`;
 }
@@ -566,8 +566,8 @@ qq{</fieldset>
 <!--==========================================================================================-->
 <fieldset><legend>2. Set Foswiki Settings</legend>
 <div id=configure><fieldset id=configure><legend>configure</legend>
-username <input $htpasswd_avail type=text name=configure_admin id=configure_admin value='wikimaster' /><br />
-<div class=help id=configure_admin_help>This is the account name to allow access to Foswiki's system configuration<br/></div>
+username <input $htpasswd_avail type=text name=configure_username id=configure_username value='admin' /><br />
+<div class=help id=configure_username_help>This is the account name to allow access to Foswiki's system configuration<br/></div>
 password <input $htpasswd_avail type=password name=configure_password id=configure_password /><br />
 <div class=help id=configure_password_help>Be sure to pick a secure password!<br/></div>
 password (again) $htpasswd_avail <input type=password name=configure_password2 id=configure_password2 /> <span id=password_mismatch></span><br/>
@@ -759,7 +759,7 @@ function checkEnableInstallButton(e) {
 	
 	var disabled = false;
 	
-	var required_fields = [ 'FoswikiFor', 'configure_admin', 'configure_password', 'configure_password2', 'WebMasterEmail', 'FoswikiAdmin', 'perl', 'force_installation' ];
+	var required_fields = [ 'FoswikiFor', 'configure_username', 'configure_password', 'configure_password2', 'WebMasterEmail', 'FoswikiAdmin', 'perl', 'force_installation' ];
 	for ( i=0; i<required_fields.length; ++i ) {
 		var field = required_fields[i];
 		var el = document.getElementById( field );
