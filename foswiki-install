@@ -523,12 +523,12 @@ my $repository = {
     'foswiki.biohack.net' => [
 #		      { url => 'http://foswiki.biohack.net/pub/twiki/TWiki-SVN-MAIN.zip', },
 		      ],
+    'wikiring.com.mx' => [
+    		      ],
     'wikiring.de' => [
 		       ],
     'wikiring.com' => [
 		       ],
-    'structuredwikis.com' => [
-			      ],
     'distributedinformation.com' => [
 				     ],
     'local' => eval { [ 
