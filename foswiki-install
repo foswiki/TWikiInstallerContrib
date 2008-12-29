@@ -168,7 +168,7 @@ my $localDirConfig = {
 # inversion duplication from above (mostly)
 my $mapFoswikiDirs = {
     lib       => { perms => 0440, dest => "$foswikiDir/lib", },
-    pub       => { perms => 0660, dest => $localDirConfig->{PubDir}, },
+    pub       => { perms => 0664, dest => $localDirConfig->{PubDir}, },
     data      => { perms => 0660, dest => $localDirConfig->{DataDir}, },
     templates => { perms => 0440, dest => $localDirConfig->{TemplateDir}, },
     bin       => { perms => 0550, dest => "$foswikiDir/bin", },
