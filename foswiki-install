@@ -258,18 +258,23 @@ foreach my $plugin ( sort { lc $a cmp lc $b } keys %installedPlugins ) {
 
 $LocalSiteCfg .= <<__LOCALSITE_CFG__;
 #===============================================================================
+\$Foswiki::cfg{WebMasterEmail} = '$WebMasterEmail';
 \$Foswiki::cfg{AutoAttachPubFiles} = 1;
 \$Foswiki::cfg{EnableHierarchicalWebs} = 1;
-\$Foswiki::cfg{LoginManager} = 'Foswiki::Client::TemplateLogin';
+\$Foswiki::cfg{LoginManager} = 'Foswiki::LoginManager::TemplateLogin';
 \$Foswiki::cfg{UserInterfaceInternationalisation} = 1;
-#\$Foswiki::cfg{WarningsAreErrors} = 1;
+\$Foswiki::cfg{INCLUDE}{AllowURLs} = 1;
+\$Foswiki::cfg{UserMappingManager} = 'Foswiki::Users::TopicUserMapping';
 # SMELL: blech, temp hack
 \$Foswiki::cfg{Site}{CharSet} = 'iso-8859-15';
+\$Foswiki::cfg{Site}{Locale} = 'en_US.ISO-8859-15';
+\$Foswiki::cfg{Register}{EnableNewUserRegistration} = 1;
+#\$Foswiki::cfg{WarningsAreErrors} = 1;
 #===============================================================================
 __LOCALSITE_CFG__
 
 # generate LocalSite.cfg entries for variable entries (url/path,...)
-foreach my $localSiteEntry ( qw( DefaultUrlHost ScriptUrlPath ScriptSuffix PubUrlPath PubDir TemplateDir DataDir LogsDir LocalesDir ) ) {
+foreach my $localSiteEntry ( qw( DefaultUrlHost ScriptUrlPath ScriptSuffix PubUrlPath PubDir TemplateDir DataDir LogsDir LocalesDir WorkingDir ) ) {
     # normalise pathnames (entries ending in ...Dir) (Sandbox.pm doesn't like .. in pathnames!)
     $localDirConfig->{ $localSiteEntry } = abs_path( $localDirConfig->{ $localSiteEntry } ) 
 	if $localSiteEntry =~ /Dir$/;
