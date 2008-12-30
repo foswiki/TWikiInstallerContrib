@@ -253,6 +253,7 @@ close( FH ) or die "Can't close $fnLocalLibCfg: $! ???";
 # LocalSite.cfg
 
 foreach my $plugin ( sort { lc $a cmp lc $b } keys %installedPlugins ) {
+#    $LocalSiteCfg .= "\$Foswiki::cfg{Plugins}{$plugin}{Module} = 'Foswiki::Plugins::$plugin';\n";
     $LocalSiteCfg .= "\$Foswiki::cfg{Plugins}{$plugin}{Enabled} = 1;\n";
 }
 
@@ -506,6 +507,8 @@ my $repository = {
     'foswiki.org' => [
 		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta2/Foswiki-1.0.0-beta2.zip',
 		    },
+		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta2/Foswiki-1.0.0-compat-beta2.zip',
+		    }
 		      ],
     'Nightly Builds' => [
 			 { url => 'http://fosiki.com/Foswiki_trunk/Foswiki-1.0.0-beta1-auto1595.zip',
