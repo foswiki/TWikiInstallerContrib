@@ -564,7 +564,7 @@ You are about to install Foswiki to<br />
 <!--==========================================================================================-->
 <fieldset><legend>1. Choose a Foswiki Release</legend>
 
-Foswiki release to install <input type="text" name="FoswikiFor" id="FoswikiFor" value="http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta2/Foswiki-1.0.0-beta2.zip" size="50" />
+Foswiki release to install <input type="text" name="FoswikiFor" id="FoswikiFor" value="http://fosiki.com/Foswiki_trunk/Foswiki-1.0.0-auto1977.zip" size="50" />
 <div class=help id="FoswikiFor_help" >Select a Foswiki release from the list below <i>or</i> enter a URL manually
 <!-- By the way, this should also be able to install Foswiki extensions -->
 </div>
