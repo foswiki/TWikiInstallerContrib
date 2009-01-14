@@ -504,15 +504,10 @@ sub foswikiForMenu {
 
 my $repository = {
     'foswiki.org' => [
-		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta3/Foswiki-1.0.0-beta3.zip' },
-		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta3/Foswiki-1.0.0-notwiki-beta3.zip' },
-		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta2/Foswiki-1.0.0-beta2.zip' },
-		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta2/Foswiki-1.0.0-compat-beta2.zip' },
-		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta1/Foswiki-1.0.0-beta1.zip' },
-		      { url => 'http://foswiki.org/pub/Download/FoswikiRelease01x00x00Beta1/Foswiki-1.0.0-compat-beta1.zip' },
+	{ url => 'http://downloads.sourceforge.net/foswiki/Foswiki-1.0.0.zip' }
 		      ],
     'Nightly Builds' => [
-			 { url => 'http://fosiki.com/Foswiki_trunk/Foswiki-1.0.0-beta2-auto1678.zip',
+			 { url => 'http://fosiki.com/Foswiki_trunk/Foswiki-1.0.0-auto1977.zip',
 			   favicon => 'http://fosiki.com/favicon.ico',
 		       },
 			 ],
