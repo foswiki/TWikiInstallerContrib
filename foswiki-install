@@ -108,7 +108,6 @@ use File::Basename qw( basename );
 use Cwd qw( abs_path );
 use English;
 #use Error qw( :try );
-use CGI::Ajax;
 
 my $q = CGI::new() or die $!;
 my $LocalSiteCfg;
@@ -621,13 +620,7 @@ After the installation, you can start using the wiki right away or configure it 
 <!--==========================================================================================-->
 	</div>
 </div>
-<input type=button name=ajax value="ajax" onclick="alert('test')" />
 };
-
-
-#my $cgi  = CGI->new();
-#my $ajax = CGI::Ajax->new( check_username => \&check_username );
-#$text .= $ajax->build_html( $cgi, \&ajax_main );
 
 ################################################################################
 
@@ -641,36 +634,6 @@ After the installation, you can start using the wiki right away or configure it 
 ################################################################################
 
 sub check_username { }
-
-#sub ajax_main {
-#
-#    my $html = <<HTML;
-#<html><head>
-#<title>Ordinary CGI demo</title>
-#</head><body>
-#<h1>Signup!</h1>
-#HTML
-#if ( my $user = $cgi->param('user') ) {
-#    my $err = check_username( $user );
-#    if ( $err ) {
-#	$html .= "<p class='problem'>$err</p>";
-#    } else {
-#	save_username( $user );
-#	$html .= "<p>Account <em>$user</em> created!</p>\n";
-#    }
-#}
-#    my $url = $cgi->url(-relative => 1);
-#    $html .= <<HTML;
-#<form action="$url" method="post">
-#<p>Please fill in the details to create a new Account.</p>
-#<p>Username: <input type="text" name="user" id="user"/></p>
-#<p>Password: <input type="password" name="pass" id="pass"/></p>
-#<p><input type="submit" name="submit" value="SIGNUP"/></p>
-#</form></body></html>
-#HTML
-#
-#    return $html;
-#}
 
 # parameters
 # cgi: 
