@@ -4,14 +4,14 @@
 use strict;
 ++$|;
 
-# this simple script performs an installation (local or remote) of twiki
+# this simple script performs an installation (local or remote) of foswiki
 # through the following two step procedure:
-#   1. copy the twiki-install script to a cgi directory on a server
+#   1. copy the foswiki-install script to a cgi directory on a server
 #      * (you can specify a path to perl, in case your perl is in a weird place or you want to use a perl accelerator) - all perl references will be patched during the install process
 #      * (you can specify a cgi script extension if that's a requirement on the server) - everything is configured for the script extension and all script filenames have the extension appended during the installation process
-#   2. fetch the twiki-install page, thereby performing the installation
-#      * (installation can be customised by overriding values in the html form (TWikiFor kernel extension perl WikiAdmin WIKIWEBMASTER force))
-#      * after the installation, twiki-install disables itself
+#   2. fetch the foswiki-install page, thereby performing the installation
+#      * (installation can be customised by overriding values in the html form (FoswikiFor kernel extension perl WikiAdmin WIKIWEBMASTER force))
+#      * after the installation, foswiki-install disables itself
 #         * (currently, it deletes itself, though i'd probably prefer to have it change its permissions (but for some reason that didn't work when i tried it))
 
 use Getopt::Long qw( :config bundling auto_version );
@@ -37,7 +37,7 @@ my $Config = {
 };
 Getopt::Long::Configure( 'bundling' );
 my $result = GetOptions( $Config,
-			 'url=s', 'dir=s', 'TWikiFor=s', 'kernel=s', 'extension=s@',
+			 'url=s', 'dir=s', 'FoswikiFor=s', 'kernel=s', 'extension=s@',	# FoswikiFor|Personality(Module) ?
 			 'perl=s', 'WikiAdmin=s', 'WIKIWEBMASTER=s', 'force|f',
 			 'verbose', 'help|?', 'man', 'debug', 'agent=s',
 			 );
@@ -61,7 +61,7 @@ exit if $requiredParameterError;
 ( $Config->{scriptSuffix} ) = $Config->{scriptName} =~ m|(\..*)$|;
 $Config->{scriptSuffix} ||= '';
 
-exit ( PushRemoteTWikiInstall({ %$Config }) == 0 );
+exit ( PushRemoteFoswikiInstall({ %$Config }) == 0 );
 
 ################################################################################
 
@@ -73,15 +73,15 @@ sub logSystem
 
 ################################################################################
 
-sub PushRemoteTWikiInstall
+sub PushRemoteFoswikiInstall
 {
     my $parms = shift;
-    print STDERR "PushRemoteTWikiInstall: ", Dumper( $parms ) if $parms->{debug};
+    print STDERR "PushRemoteFoswikiInstall: ", Dumper( $parms ) if $parms->{debug};
 
     die "no url?" unless $parms->{url};
     die "no dir?" unless $parms->{dir};
 
-    open( SCRIPT, '<', "$FindBin::Bin/../twiki-install" ) or die $!;
+    open( SCRIPT, '<', "$FindBin::Bin/../foswiki-install" ) or die $!;
     local $/ = undef;
     my $script = <SCRIPT>;
     close SCRIPT;
@@ -104,7 +104,7 @@ sub PushRemoteTWikiInstall
     my $urlParameters = { install => 'install' };
     # add optional parameters
     map { $urlParameters->{$_} = $Config->{$_} if $Config->{$_} } 
-    	qw( TWikiFor kernel extension perl WikiAdmin WIKIWEBMASTER force );
+    	qw( FoswikiFor kernel extension perl WikiAdmin WIKIWEBMASTER force );
     $urlInstallWithConfig->query_form( $urlParameters );
     $Config->{debug} && print "\n$urlInstallWithConfig\n";
 
@@ -127,21 +127,21 @@ sub PushRemoteTWikiInstall
 __DATA__
 =head1 NAME
 
-install-twiki.pl - fully automated network TWiki command-line installation frontend
+install-foswwiki.pl - fully automated network Foswiki command-line installation frontend
 
-Copyright 2005,2006 Will Norris.  All Rights Reserved.
+Copyright 2005,2006, 2010 Will Norris.  All Rights Reserved.
 
 =head1 SYNOPSIS
 
-install-twiki.pl -url -dir [-kernel] -force|-f [-extension ...]* [-report|-noreport] [-verbose] [-debug] [-help] [-man]
+install-foswiki.pl -url -dir [-kernel] -force|-f [-extension ...]* [-report|-noreport] [-verbose] [-debug] [-help] [-man]
 
 =head1 OPTIONS
 
 =over 8
 
-=item B<-TWikiFor [TWikiFor]>				TWikiFor* filename (only .zip supported atm)
+=item B<-FoswikiFor [FoswikiFor]>				FoswikiFor* filename (only .zip supported atm)
 
-=item B<-url >						url of twiki-install script to run (this is where twiki-install is copied to); can include an extension on the script name (eg, .cgi)
+=item B<-url >						url of foswiki-install script to run (this is where foswiki-install is copied to); can include an extension on the script name (eg, .cgi)
 
 =item B<-dir >						filepath to the directory where the script is installed to (related to its url, above)
 
@@ -166,20 +166,20 @@ install-twiki.pl -url -dir [-kernel] -force|-f [-extension ...]* [-report|-norep
 
 =head1 EXAMPLES
 
-time bin/install-twiki.pl \
-    --TWikiFor=http://TWikiFor.twiki.org/~twikibuilder/twiki/twiki.org.zip \
+time bin/install-foswiki.pl \
+    --FoswikiFor=http://personalities.foswiki.org/Foswiki01x00x09.zip \
 	--dir=$ACCOUNT@`hostname`:~/public_html/cgi-bin \
-	--url=http://`hostname`/~$ACCOUNT/cgi-bin/twiki-install.cgi \
+	--url=http://`hostname`/~$ACCOUNT/cgi-bin/foswiki-install.cgi \
 	--extension=CpanContrib
 
 
 =head1 DESCRIPTION
 
-B<install-twiki.pl> ...
+B<install-foswiki.pl> ...
 
 
 =head2 SEE ALSO
 
-  http://twiki.org/cgi-bin/view/Plugins/TWikiInstallerContrib
+  http://foswiki.org/Extensions/FoswikiInstallerContrib
 
 =cut

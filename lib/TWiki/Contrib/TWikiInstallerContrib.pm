@@ -1,11 +1,11 @@
 #!/usr/bin/perl -w
-# $Id: install_twiki.cgi 7202 2005-10-28 20:36:14Z WillNorris $
-# Copyright 2004,2005 Will Norris.  All Rights Reserved.
+# $Id: install_foswiki.cgi 7202 2005-10-28 20:36:14Z WillNorris $
+# Copyright 2004,2005, 2010 Will Norris.  All Rights Reserved.
 # License: GPL
 use strict;
 ++$|;
 
-package TWiki::Contrib::TWikiInstallerContrib;
+package Foswiki::Contrib::FoswikiInstallerContrib;
 
 use vars qw( $VERSION );
 $VERSION = '$Rev$';
@@ -24,12 +24,12 @@ use Data::Dumper qw( Dumper );
 ################################################################################
 
 # parameters
-# module: module filename relative to components (eg, kernels/TWikiDEVELOP6666.zip or extension/BlogPlugin.zip)
-sub _InstallTWikiExtension {
+# module: module filename relative to components (eg, kernels/Foswiki_trunk.zip or extension/BlogPlugin.zip)
+sub _InstallFoswikiExtension {
     my ( $p ) = @_;
     my $tmpInstall = $p->{tmpInstall} or die "tmpInstall";
     my $module = $p->{module} or die "module";
-    my $mapTWikiDirs = $p->{mapTWikiDirs} or die "mapTWikiDirs";
+    my $mapFoswikiDirs = $p->{mapFoswikiDirs} or die "mapFoswikiDirs";
     my $localDirConfig = $p->{localDirConfig} or die "localDirConfig";
     my $perl = $p->{perl} || $EXECUTABLE_NAME;
 
@@ -48,7 +48,7 @@ sub _InstallTWikiExtension {
     my ( $name ) = ( basename $module ) =~ /(.*)\./;
     die "name is tainted" if tainted $name;
 
-    print STDERR "TWikiInstallerContrib: Installing $name\n";
+    print STDERR "FoswikiInstallerContrib: Installing $name\n";
     my $q = CGI->new() or die $!;
     push @text, $q->b( $name );
 
@@ -63,7 +63,7 @@ sub _InstallTWikiExtension {
 	# TODO: rename $base to something more descriptive (like ...?)
 	next unless my ($path,$base) = $file =~ m|^([^/]+)(/.*)$|;
 
-	my $map = $mapTWikiDirs->{$path} or warn "no mapping for [$path]", next;
+	my $map = $mapFoswikiDirs->{$path} or warn "no mapping for [$path]", next;
 	my $dirDest = $map->{dest} or die "no destination directory for [$path] " . Dumper( $map );
 
 	# handle directories (path ends with /?, if so, mirror directory structure)
@@ -77,7 +77,7 @@ sub _InstallTWikiExtension {
 	chmod $map->{perms}, $destFile if $map->{perms};
 
 	# only Plugins have to be enabled (i.e., Contribs and Skins are "always on")
-	if ( my ( $plugin ) = $file =~ m|^lib/TWiki/Plugins/(.+Plugin).pm$| ) {
+	if ( my ( $plugin ) = $file =~ m|^lib/Foswiki/Plugins/(.+Plugin).pm$| ) {
 	    ++$plugins->{$plugin};
 	}
 

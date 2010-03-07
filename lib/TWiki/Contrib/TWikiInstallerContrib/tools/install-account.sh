@@ -19,10 +19,10 @@ then
 	sudo chown -R $ACCOUNT.$ACCOUNT /home/$ACCOUNT/.ssh
 fi
 
-if [ -d /home/$ACCOUNT/public_html/cgi-bin/twiki ]
+if [ -d /home/$ACCOUNT/public_html/cgi-bin/foswiki ]
 then
-	echo Removing previous TWiki installation
-	sudo rm -rf /home/$ACCOUNT/public_html/cgi-bin/twiki
+	echo Removing previous Foswiki installation
+	sudo rm -rf /home/$ACCOUNT/public_html/cgi-bin/foswiki
 fi
 
 echo Creating web directory structure
@@ -31,9 +31,9 @@ sudo -u $ACCOUNT chmod g+w /home/$ACCOUNT/public_html/cgi-bin
 sudo chgrp -R www-data /home/$ACCOUNT/public_html;
 
 echo Installing...
-time bin/install-twiki.pl \
-    --TWikiFor=http://TWikiFor.twiki.org/~twikibuilder/twiki/twiki.org.zip \
+time bin/install-foswiki.pl \
+    --FoswikiFor=http://.foswiki.org/~foswikibuilder/foswiki/foswiki.org.zip \
 	--dir=$ACCOUNT@`hostname`:~/public_html/cgi-bin \
-	--url=http://`hostname`/~$ACCOUNT/cgi-bin/twiki-install.cgi \
+	--url=http://`hostname`/~$ACCOUNT/cgi-bin/foswiki-install.cgi \
 	--extension=CpanContrib \
 	$EXTENSIONS \

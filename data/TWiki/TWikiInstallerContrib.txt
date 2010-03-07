@@ -15,16 +15,16 @@ div.fragment{
 
 ---+!! Abstract
 
-The TWikiInstallerContrib provides web-based and command line-based tools for __installing__ TWiki and TWiki plugins.
+The FoswikiInstallerContrib provides web-based and command line-based tools for __installing__ Foswiki and Foswiki plugins.
 
 
 %TOC%
 
----+ How to use TWikiInstallerContrib
+---+ How to use FoswikiInstallerContrib
 
 ---++ Web-based GUI Installer
 
-Download and install %ATTACHURL%/twiki-install to a directory where you can run scripts from (eg, =~/public_html/cgi-bin=).  Depending on your webhosting server, you may need to make certain changes to the script in order for it to run.  Some example modifications include:
+Download and install %ATTACHURL%/foswiki-install to a directory where you can run scripts from (eg, =~/public_html/cgi-bin=).  Depending on your webhosting server, you may need to make certain changes to the script in order for it to run.  Some example modifications include:
    * *Give the script an extension*  _If_ you need this, it will usually be a =.cgi= extension.  Another possibility is =.pl=.
    * *Change the location of the perl executable for the script to run*  The default version points to =/usr/local/bin/perl=.  If your perl interpreter is not located there, modify the line to point to your perl executable.  Some sample paths are =/usr/bin/perl= or =/opt/bin/perl=.
 
@@ -35,7 +35,7 @@ In your web browser, browse to the URL to execute the install script.  You shoul
 <a href="%ATTACHURLPATH%/snapshot1.png" ><img src="%ATTACHURLPATH%/snapshot1-thumb.png" /></a><br />
 </td>
 <td>
-   1. Specify a TWiki:Codev.TWikiFor distribution.  Click "Next".
+   1. Specify a Foswiki:Development.FoswikiFor distribution.  Click "Next".
 </td>
 </tr>
 <tr>
@@ -43,11 +43,11 @@ In your web browser, browse to the URL to execute the install script.  You shoul
 <a href="%ATTACHURLPATH%/snapshot1.png" ><img src="%ATTACHURLPATH%/snapshot2-thumb.png" /></a><br />
 </td>
 <td>
-   2. Choose a TWiki:Codev.TWikiKernel to install.  Typically, there will be only one packaged with the TWiki:Codev.TWikiFor.  However, if there are multiple TWiki:Codev.TWikiKernels available, newer versions are listed first.  
+   2. Choose a Foswiki:Development.FoswikiKernel to install.  Typically, there will be only one packaged with the Foswiki:Development.FoswikiFor.  However, if there are multiple Foswiki:Development.FoswikiKernels available, newer versions are listed first.  
    3. Set the perl executable path.  Typically, you won't need to change this.  The script either worked as-in, or you already updated the perl path in the script.  You will want to change this if you are using a perl accelerator; specify the full path to the accelerator.
    4. Specify an account name to automatically create.  This must be a proper WikiWord.
-   5. Specify the WIKIWEBMASTER.  [[%LOCALSITEPREFS%]] is automatically updated with this TWikiPreferenceVariable.
-   6. Optionally select additional TWikiExtensions to install.
+   5. Specify the WIKIWEBMASTER.  [[%LOCALSITEPREFS%]] is automatically updated with this preferences setting.
+   6. Optionally select additional FoswikiExtensions to install.
    7. Finally, click the "Install" button.
 </td></tr>
 </table>
@@ -60,7 +60,7 @@ In your web browser, browse to the URL to execute the install script.  You shoul
 --------------------------------------------------------------------------------
 ---++ Scripted Installation
 
-The following scripts provide _an_ automated solution to create a twiki installation from scratch.  It provides a specific which may be useful for many people's needs.  This script provides a solution which is most useful for people with certain types of environments, ones in which you can create users.  The setup is often found on corporate servers, home Linux boxes, and upper-tier hosting environments.   (plus virtualisation technology...)
+The following scripts provide _an_ automated solution to create a Foswiki installation from scratch.  It provides a specific which may be useful for many people's needs.  This script provides a solution which is most useful for people with certain types of environments, ones in which you can create users.  The setup is often found on corporate servers, home Linux boxes, and upper-tier hosting environments.   (plus virtualisation technology...)
 
 The directions written here have been developed on a Debian-based system.  Many other distributions will be substiantially similar (if not identical).  (...other systems?) 
 
@@ -95,35 +95,35 @@ say, something like this setup:
 
 
 --------------------------------------------------------------------------------
----+++ To install a TWiki to an account with Apache a typical configuration of =mod_user=
+---+++ To install a Foswiki to an account with Apache a typical configuration of =mod_user=
 
 (this is often the setup for webhosting as well).  Four pieces of information need to be specified:
    | *Parameter* | *Description* | *Sample Value* |
-   | ACCOUNT | Account name | =twiki= |
+   | ACCOUNT | Account name | =foswiki= |
    | HOST | Hostname | =localhost= |
    | DIR | File location of the =cgi-bin= directory | =$ACCOUNT@$HOST:~/public_html/cgi-bin= |
-   | URL | URL of the =cgi-bin= directory | =http://$HOST/~$ACCOUNT/cgi-bin/twiki-install.cgi= |
+   | URL | URL of the =cgi-bin= directory | =http://$HOST/~$ACCOUNT/cgi-bin/foswiki-install.cgi= |
 
-the =install-twiki.pl= script copies the installation script to the server, and then executes the web page by calling a URL designed to perform the installation with its configuration options (see =$TWIKIDEV/twikiplugins/TWikiInstallerContrib/lib/TWiki/Contrib/TWikiInstallerContrib/bin/install-twiki.pl --help= for more installation configuration options).
+the =install-foswiki.pl= script copies the installation script to the server, and then executes the web page by calling a URL designed to perform the installation with its configuration options (see =$FOSWIKIDEV/FoswikiInstallerContrib/lib/Foswiki/Contrib/FoswikiInstallerContrib/bin/install-foswiki.pl --help= for more installation configuration options).
 
 %CODE%
-ACCOUNT=twiki \
+ACCOUNT=foswiki \
 HOST=localhost \
 DIR="$ACCOUNT@$HOST:~/public_html/cgi-bin" \
-URL="http://$HOST/~$ACCOUNT/cgi-bin/twiki-install.cgi" \
-EXTENSIONS="--extension=TWikiInstallerContrib --extension=TWikiPluginInstallerContrib" ; \
-$TWIKIDEV/twikiplugins/TWikiInstallerContrib/lib/TWiki/Contrib/TWikiInstallerContrib/bin/install-twiki.pl \
+URL="http://$HOST/~$ACCOUNT/cgi-bin/foswiki-install.cgi" \
+EXTENSIONS="--extension=FoswikiInstallerContrib --extension=FoswikiPluginInstallerContrib" ; \
+$FOSWIKIDEV/FoswikiInstallerContrib/lib/Foswiki/Contrib/FoswikiInstallerContrib/bin/install-foswiki.pl \
    --dir=$DIR --url=$URL $EXTENSIONS
 %ENDCODE%
 
-This example shows how =$URL= can specify a required script extension (just add it to the end of =twiki-install=), and the installer modifies scripts that are installed by renaming them with the same extension and updating the perl executable location.
+This example shows how =$URL= can specify a required script extension (just add it to the end of =foswiki-install=), and the installer modifies scripts that are installed by renaming them with the same extension and updating the perl executable location.
 
-=install-twiki.pl= creates an installation report at =./install-report.html=
+=install-foswiki.pl= creates an installation report at =./install-report.html=
 
 --------------------------------------------------------------------------------
 ---+++ Debian complete account creation
 
-This script creates a new user account (if it doesn't exist), (SSH KEYS), sets up the user webspace (including =cgi-bin= directory), and finally, actually performs a TWiki installation.
+This script creates a new user account (if it doesn't exist), (SSH KEYS), sets up the user webspace (including =cgi-bin= directory), and finally, actually performs a Foswiki installation.
 
 %CODE%
 #! /bin/sh
@@ -147,10 +147,10 @@ then
 	sudo chown -R $ACCOUNT.$ACCOUNT /home/$ACCOUNT/.ssh
 fi
 
-if [ -d /home/$ACCOUNT/public_html/cgi-bin/twiki/ ]
+if [ -d /home/$ACCOUNT/public_html/cgi-bin/foswiki/ ]
 then
-        echo Removing previous TWiki installation
-        sudo rm -rf /home/$ACCOUNT/public_html/cgi-bin/twiki/
+        echo Removing previous Foswiki installation
+        sudo rm -rf /home/$ACCOUNT/public_html/cgi-bin/foswiki/
 fi
 
 echo Creating web directory structure
@@ -159,23 +159,23 @@ sudo -u $ACCOUNT chmod g+w /home/$ACCOUNT/public_html/cgi-bin
 sudo chgrp -R www-data /home/$ACCOUNT/public_html;
 
 echo Installing...
-time bin/install-twiki.pl \
+time bin/install-foswiki.pl \
         --dir=$ACCOUNT@localhost:~/public_html/cgi-bin \
-        --url=http://localhost/~$ACCOUNT/cgi-bin/twiki-install.cgi \
+        --url=http://localhost/~$ACCOUNT/cgi-bin/foswiki-install.cgi \
         $EXTENSIONS \
 %ENDCODE%
 
-the script is =install-acount.sh= in the =TWikiInstallerContrib/bin= directory.  Here is a sample 
+the script is =install-acount.sh= in the =FoswikiInstallerContrib/bin= directory.  Here is a sample 
 
 %CODE%
-cd $TWIKIDEV/$BRANCH/twikiplugins/TWikiInstallerContrib/lib/TWiki/Contrib/TWikiInstallerContrib/
+cd $FOSWIKIDEV/$BRANCH/FoswikiInstallerContrib/lib/Foswiki/Contrib/FoswikiInstallerContrib/
 EXTENSIONS=' \
-   --extension=TWikiInstallerContrib --extension=TWikiPluginInstallerContrib \
+   --extension=FoswikiInstallerContrib --extension=FoswikiPluginInstallerContrib \
    --extension=CpanContrib --extension=SpreadSheetPlugin --extension=ExtendedSelectPlugin --extension=TablePlugin \
    --extension=CommentPlugin --extension=InterwikiPlugin --extension=TwistyPlugin --extension=TwistyContrib \
    --extension=JSCalendarContrib --extension=DateFieldPlugin \
    --extension=CalendarPlugin --extension=QuickCalendarPlugin \
-   --extension=MailerContrib --extension=TWikiShellContrib --extension=SmiliesPlugin \
+   --extension=MailerContrib --extension=FoswikiShellContrib --extension=SmiliesPlugin \
    --extension=RecursiveRenderPlugin \
    --extension=FindElsewherePlugin --extension=TocPlugin --extension=GetAWebAddOn \
 \
@@ -198,9 +198,9 @@ EXTENSIONS=' \
 
 not connected to the internet during installation; pre-download the various bits
 
-   * download a TWikiFor .zip file; place it in the same directory as the script file; name the downloaded file install.zip
+   * download a FoswikiFor .zip file; place it in the same directory as the script file; name the downloaded file install.zip
 <!--
 SMELL: add more...
 -->
 
--- TWiki:Main.WillNorris - 15 Apr 2006
+-- Foswiki:Main.WillNorris - 15 Apr 2006, 07 Mar 2010
