@@ -16,15 +16,14 @@ SetHandler cgi-script
 
 * AND THEN REFRESH THIS PAGE
 ________________________________________________________________________________
+
 # Copyright 2004,2005,2007 Will Norris.  All Rights Reserved.
-
-
-
 
 # $Id: install_foswiki.cgi 7202 2005-10-28 20:36:14Z WillNorris $
 # License: GPL
 use strict;
 use warnings;
+
 #use Data::Dumper qw( Dumper );
 ++$|;
 
@@ -34,7 +33,7 @@ use warnings;
 # perl: name of perl executable (autodetected, but can be manually overridden)
 # kernel: name of kernel to install (eg, FoswikiKernelDEVELOP7684)
 # extension: name of extensions to install (BlogPlugin, ImageGalleryPlugin, PublishContrib)
-# FoswikiFor: 
+# FoswikiFor:
 #
 # TODO parameters:
 # from http://twiki.org/cgi-bin/view/Sandbox/WillNorrisSandbox?DOMAIN=admin.langalot.com&TWIKI_URL_PATH_DIR=twiki&USER=wn&DEFAULT_WEB=&ADMIN=webmaster&install_type=svn_main
@@ -53,7 +52,7 @@ use warnings;
 #
 # administrator ($WikiAdmin)
 #	(and update Main.AdminGroup)
-# wikiwebmaster (for email about this wiki site) - 
+# wikiwebmaster (for email about this wiki site) -
 #	(and update %SYSTEMWEB%.SitePreferences) - $wikiWebMaster
 #
 # other TODO?
@@ -62,7 +61,7 @@ use warnings;
 # DONE
 # move 'configure & select individual components' checkbox to after we even know if there are any
 # clicking repository updates url field
-# 
+#
 ################################################################################
 
 use File::Path qw( mkpath rmtree );
@@ -71,37 +70,46 @@ use FindBin;
 use File::Basename qw( basename );
 use Cwd qw( abs_path );
 use English;
+
 #use WWW::Mechanize::Foswiki;
 #use Error qw( :try );
 
 my $q = CGI::new() or die $!;
+
 # object data
 my $LocalSiteCfg;
 my $WikiAdmin = $q->param('WikiAdmin') || '';
-my $WebMasterEmail = $q->param('WebMasterEmail') || $ENV{SERVER_ADMIN} || "webmaster\@$ENV{HTTP_HOST}";
+my $WebMasterEmail =
+     $q->param('WebMasterEmail')
+  || $ENV{SERVER_ADMIN}
+  || "webmaster\@$ENV{HTTP_HOST}";
 my $FoswikiFor = $q->param('FoswikiFor');
+
 #my $FoswikiFor = $q->param('FoswikiFor') || 'http://localhost/~foswikibuilder/foswiki.org.zip';
-my $perl = $q->param( 'perl' ) || $EXECUTABLE_NAME;
+my $perl = $q->param('perl') || $EXECUTABLE_NAME;
 
 ################################################################################
 
-print $q->header(),
-    $q->start_html( -title => 'Foswiki Installer',
-		    -BGCOLOR => '#f4c000',
-		    -style => {
-    			-src => [ 'http://foswiki.biohack.net/pub/FoswikiInstallerContrib/reset.css',
-				  'http://foswiki.biohack.net/pub/FoswikiInstallerContrib/styles.css', ],
-			-code => <<__CSS__,
+print $q->header(), $q->start_html(
+    -title   => 'Foswiki Installer',
+    -BGCOLOR => '#f4c000',
+    -style   => {
+        -src => [
+            'http://foswiki.biohack.net/pub/FoswikiInstallerContrib/reset.css',
+            'http://foswiki.biohack.net/pub/FoswikiInstallerContrib/styles.css',
+        ],
+        -code => <<__CSS__,
 /*
 .repository { background:pink; color:green; }
 .repositoryName { background:magenta; }
 */
 __CSS__
-		     },
-    -onload => "expand_collapse_repositories('foswiki.org'); checkEnableInstallButton(event);",
+    },
+    -onload =>
+"expand_collapse_repositories('foswiki.org'); checkEnableInstallButton(event);",
     -onkeyup => "checkEnableInstallButton(event)",
     -onclick => "checkEnableInstallButton(event)",
-    -script => q{
+    -script  => q{
 function isEmpty(str) {
 	return str === '';
 }
@@ -143,37 +151,48 @@ function checkEnableInstallButton(e) {
 	return false;
 }
 },
-		    -head => [ map { 
-			       Link({-rel => $_,
-				     -href => 'http://foswiki.biohack.net/pub/FoswikiInstallerContrib/favicon.ico',
-				     -type => "image/x-icon"}) } ( 'icon', 'shortcut icon' )
-			       ]
-			       );
+    -head => [
+        map {
+            Link(
+                {
+                    -rel => $_,
+                    -href =>
+'http://foswiki.biohack.net/pub/FoswikiInstallerContrib/favicon.ico',
+                    -type => "image/x-icon"
+                }
+              )
+          } ( 'icon', 'shortcut icon' )
+    ]
+);
 
 ################################################################################
 
-my %installedPlugins;	# which plugins get installed/are encountered
+my %installedPlugins;    # which plugins get installed/are encountered
 my $foswikiDir = "$FindBin::Bin";
 
-my ( $foswikiPath ) = $ENV{SCRIPT_NAME} =~ m|(.*)/.*|;		# remove the script name from the path
+my ($foswikiPath) =
+  $ENV{SCRIPT_NAME} =~ m|(.*)/.*|;    # remove the script name from the path
+
 #print STDERR "foswikiPath=[$foswikiPath]\n";
 
 # automatically detect required script suffix from this script's filename
-my ( $scriptSuffix ) = $ENV{SCRIPT_NAME} =~ m|.*/.*(\..*)$|;
+my ($scriptSuffix) = $ENV{SCRIPT_NAME} =~ m|.*/.*(\..*)$|;
 $scriptSuffix ||= '';
 
 my $localDirConfig = {
+
     # SMELL: doesn't handle httpS --- what happened to $ENV{SCRIPT_URI} ???
-	DefaultUrlHost   => "http://$ENV{HTTP_HOST}" . ( $ENV{SERVER_PORT} != 80 && ":$ENV{SERVER_PORT}" || '' ),
-	ScriptUrlPath    => "$foswikiPath/bin",
-	ScriptSuffix     => $scriptSuffix,
-	PubUrlPath       => "$foswikiPath/pub",
-	PubDir           => "$foswikiDir/pub",
-	TemplateDir      => "$foswikiDir/templates",
-	DataDir          => "$foswikiDir/data",
-	LocalesDir       => "$foswikiDir/locale",
-	LogDir           => "$foswikiDir/data",	# ???
-    };
+    DefaultUrlHost => "http://$ENV{HTTP_HOST}"
+      . ( $ENV{SERVER_PORT} != 80 && ":$ENV{SERVER_PORT}" || '' ),
+    ScriptUrlPath => "$foswikiPath/bin",
+    ScriptSuffix  => $scriptSuffix,
+    PubUrlPath    => "$foswikiPath/pub",
+    PubDir        => "$foswikiDir/pub",
+    TemplateDir   => "$foswikiDir/templates",
+    DataDir       => "$foswikiDir/data",
+    LocalesDir    => "$foswikiDir/locale",
+    LogDir        => "$foswikiDir/data",        # ???
+};
 
 # inversion duplication from above (mostly)
 my $mapFoswikiDirs = {
@@ -183,53 +202,54 @@ my $mapFoswikiDirs = {
     templates => { perms => 0440, dest => $localDirConfig->{TemplateDir}, },
     bin       => { perms => 0550, dest => "$foswikiDir/bin", },
     locale    => { perms => 0440, dest => $localDirConfig->{LocalesDir}, },
-#    log => ?
+
+    #    log => ?
 };
 
-	print STDERR "FindBin::Bin=[$FindBin::Bin]\n";
+print STDERR "FindBin::Bin=[$FindBin::Bin]\n";
 
 ################################################################################
 # already installed?
 ################################################################################
-sub isFoswikiAlreadyInstalled
-{
+sub isFoswikiAlreadyInstalled {
     return -e "$FindBin::Bin/bin/LocalLib.cfg";
 }
 
 ################################################################################
 
-sub continueToWikiUrl
-{
+sub continueToWikiUrl {
+
     # TODO: need URI for "view"
     do "lib/Foswiki.cfg";
     do "lib/LocalSite.cfg";
-    my $url = $Foswiki::cfg{DefaultUrlHost} . $Foswiki::cfg{ScriptUrlPath} 
-    . '/view'.$FOswiki::cfg{ScriptSuffix}
-    . '/Foswiki/InstalledPlugins';
+    my $url =
+        $Foswiki::cfg{DefaultUrlHost}
+      . $Foswiki::cfg{ScriptUrlPath} . '/view'
+      . $FOswiki::cfg{ScriptSuffix}
+      . '/Foswiki/InstalledPlugins';
 
     return $url;
 }
 
-
 ################################################################################
 
-sub continueToConfigureUrl
-{
+sub continueToConfigureUrl {
+
     # TODO: need URI for "view"
     do "lib/Foswiki.cfg";
     do "lib/LocalSite.cfg";
-    my $url = $Foswiki::cfg{DefaultUrlHost} . $Foswiki::cfg{ScriptUrlPath} . '/configure';
+    my $url =
+        $Foswiki::cfg{DefaultUrlHost}
+      . $Foswiki::cfg{ScriptUrlPath}
+      . '/configure';
 
     return $url;
 }
 
-
 ################################################################################
 
-unless ( $FoswikiFor )
-{
-    print foswikiForMenu( $q ),
-    	$q->end_html;
+unless ($FoswikiFor) {
+    print foswikiForMenu($q), $q->end_html;
     exit 0;
 }
 
@@ -239,7 +259,8 @@ mkpath $tmpInstall;
 install();
 
 print $q->p( $q->a( { -href => continueToWikiUrl() }, "Proceed to the wiki" ) );
-print $q->p( $q->a( { -href => continueToConfigureUrl() }, "Configure the wiki" ) );
+print $q->p(
+    $q->a( { -href => continueToConfigureUrl() }, "Configure the wiki" ) );
 
 print $q->end_html;
 
@@ -252,50 +273,53 @@ exit 0;
 
 sub install {
 
-print "<h1>Installing...</h1>\n";
+    print "<h1>Installing...</h1>\n";
 
-my $archive_file = 'install.zip';
-unless ( -e $archive_file ) {
-    print STDERR "downloading $FoswikiFor\n";
-    my ( $tar, $error ) = getUrl({ url => $FoswikiFor, outfile => $archive_file });
-    die $error if $error;
+    my $archive_file = 'install.zip';
+    unless ( -e $archive_file ) {
+        print STDERR "downloading $FoswikiFor\n";
+        my ( $tar, $error ) =
+          getUrl( { url => $FoswikiFor, outfile => $archive_file } );
+        die $error if $error;
 
-    open( TAR, '>', $archive_file ) or die $!;
-    binmode( TAR );
-    print TAR $tar;
-    close TAR;
-}
+        open( TAR, '>', $archive_file ) or die $!;
+        binmode(TAR);
+        print TAR $tar;
+        close TAR;
+    }
 
-$q->param( kernel => $archive_file );
-
-################################################################################
-# do the INSTALLATION
-
--d $foswikiDir || mkpath $foswikiDir or die qq{Couldn't create "$foswikiDir" to install into!};
-# chmod g+w $foswikiDir (?)
-
-InstallFoswikiExtension( "$archive_file" );
+    $q->param( kernel => $archive_file );
 
 ################################################################################
-# LocalLib.cfg
-my $fnLocalLibCfg = "$mapFoswikiDirs->{bin}->{dest}/LocalLib.cfg";
-open( FH, '>', $fnLocalLibCfg ) or die "Can't open $fnLocalLibCfg: $!";
-print FH <<'__LOCALLIB_CFG__';
+    # do the INSTALLATION
+
+    -d $foswikiDir || mkpath $foswikiDir
+      or die qq{Couldn't create "$foswikiDir" to install into!};
+
+    # chmod g+w $foswikiDir (?)
+
+    InstallFoswikiExtension("$archive_file");
+
+################################################################################
+    # LocalLib.cfg
+    my $fnLocalLibCfg = "$mapFoswikiDirs->{bin}->{dest}/LocalLib.cfg";
+    open( FH, '>', $fnLocalLibCfg ) or die "Can't open $fnLocalLibCfg: $!";
+    print FH <<'__LOCALLIB_CFG__';
 use vars qw( $foswikiLibPath );
 use Cwd qw( abs_path );
 ( $foswikiLibPath ) = ($foswikiLibPath = Cwd::abs_path( 'lib' )) =~ /(.*)/;
 1;
 __LOCALLIB_CFG__
-close( FH ) or die "Can't close $fnLocalLibCfg: $! ???";
+    close(FH) or die "Can't close $fnLocalLibCfg: $! ???";
 
 ################################################################################
-# LocalSite.cfg
+    # LocalSite.cfg
 
-foreach my $plugin ( sort { lc $a cmp lc $b } keys %installedPlugins ) {
-    $LocalSiteCfg .= "\$Foswiki::cfg{Plugins}{$plugin}{Enabled} = 1;\n";
-}
+    foreach my $plugin ( sort { lc $a cmp lc $b } keys %installedPlugins ) {
+        $LocalSiteCfg .= "\$Foswiki::cfg{Plugins}{$plugin}{Enabled} = 1;\n";
+    }
 
-$LocalSiteCfg .= <<__LOCALSITE_CFG__;
+    $LocalSiteCfg .= <<__LOCALSITE_CFG__;
 #===============================================================================
 \$Foswiki::cfg{AutoAttachPubFiles} = 1;
 \$Foswiki::cfg{EnableHierarchicalWebs} = 1;
@@ -307,33 +331,42 @@ $LocalSiteCfg .= <<__LOCALSITE_CFG__;
 #===============================================================================
 __LOCALSITE_CFG__
 
-# generate LocalSite.cfg entries for variable entries (url/path,...)
-foreach my $localSiteEntry ( qw( DefaultUrlHost ScriptUrlPath ScriptSuffix PubUrlPath PubDir TemplateDir DataDir LogDir LocalesDir ) ) {
-    # normalise pathnames (entries ending in ...Dir) (Sandbox.pm doesn't like .. in pathnames!)
-    $localDirConfig->{ $localSiteEntry } = abs_path( $localDirConfig->{ $localSiteEntry } ) 
-	if $localSiteEntry =~ /Dir$/;
+    # generate LocalSite.cfg entries for variable entries (url/path,...)
+    foreach my $localSiteEntry (
+        qw( DefaultUrlHost ScriptUrlPath ScriptSuffix PubUrlPath PubDir TemplateDir DataDir LogDir LocalesDir )
+      )
+    {
 
-    $LocalSiteCfg .= qq{\$Foswiki::cfg{$localSiteEntry} = "$localDirConfig->{$localSiteEntry}";\n};
-}
+# normalise pathnames (entries ending in ...Dir) (Sandbox.pm doesn't like .. in pathnames!)
+        $localDirConfig->{$localSiteEntry} =
+          abs_path( $localDirConfig->{$localSiteEntry} )
+          if $localSiteEntry =~ /Dir$/;
 
-# write out LocalSite.cfg
-my $fnLocalSiteCfg = "$mapFoswikiDirs->{lib}->{dest}/LocalSite.cfg";
-open( FH, '>', $fnLocalSiteCfg ) or die "Can't open $fnLocalSiteCfg: $!";
-print FH $LocalSiteCfg;
-close( FH ) or die "Can't close $fnLocalSiteCfg: $! ???";
+        $LocalSiteCfg .=
+qq{\$Foswiki::cfg{$localSiteEntry} = "$localDirConfig->{$localSiteEntry}";\n};
+    }
 
-
-################################################################################
-# setup configure
-if ( $q->param( 'configure_admin' ) ) {
-    my $htpasswd_file = $localDirConfig->{DataDir}.'/.htpasswd';
-    my $htpasswd_params = ( -e $htpasswd_file ? '' : '-c ' ) . "-b $htpasswd_file " . $q->param('configure_admin') . ' ' . $q->param('configure_password');
-    `htpasswd $htpasswd_params`;
-}
+    # write out LocalSite.cfg
+    my $fnLocalSiteCfg = "$mapFoswikiDirs->{lib}->{dest}/LocalSite.cfg";
+    open( FH, '>', $fnLocalSiteCfg ) or die "Can't open $fnLocalSiteCfg: $!";
+    print FH $LocalSiteCfg;
+    close(FH) or die "Can't close $fnLocalSiteCfg: $! ???";
 
 ################################################################################
+    # setup configure
+    if ( $q->param('configure_admin') ) {
+        my $htpasswd_file = $localDirConfig->{DataDir} . '/.htpasswd';
+        my $htpasswd_params =
+            ( -e $htpasswd_file ? '' : '-c ' )
+          . "-b $htpasswd_file "
+          . $q->param('configure_admin') . ' '
+          . $q->param('configure_password');
+        `htpasswd $htpasswd_params`;
+    }
 
-my $BinHtAccess = <<'EOT' 
+################################################################################
+
+    my $BinHtAccess = <<'EOT'
 #Block access from badly behaving robots and site sucking type programs.
 BrowserMatchNoCase ^Accoona blockAccess
 BrowserMatchNoCase ^ActiveAgent blockAccess
@@ -423,37 +456,40 @@ Options ExecCGI FollowSymLinks
     Satisfy Any
 EOT
 
-. <<EOT
+      . <<EOT
     Require user $q->param( 'configure_username' )
     AuthUserFile $localDirConfig->{DataDir}/.htpasswd
 EOT
-    . <<EOT;
+      . <<EOT;
     AuthName 'Enter your WikiName: (First name and last name, no space, no dots, capitalized, e.g. JohnSmith). Cancel to register if you do not have one.'
     AuthType Basic
     ErrorDocument 401 /foswiki/bin/view/System/UserRegistration
 </FilesMatch>
 EOT
 
-# SMELL: calculate ErrorDocument URL
+    # SMELL: calculate ErrorDocument URL
 
-#print STDERR "mtw/b: ", $mapFoswikiDirs->{bin}->{dest}, "\n";
-open ( HTACCESS, '>', $mapFoswikiDirs->{bin}->{dest} . '/.htaccess' ) or warn $!;
-print HTACCESS $BinHtAccess, "\n";
-print HTACCESS "ErrorDocument 401 bin/view$scriptSuffix/System/UserRegistration\n";
-close HTACCESS;
+    #print STDERR "mtw/b: ", $mapFoswikiDirs->{bin}->{dest}, "\n";
+    open( HTACCESS, '>', $mapFoswikiDirs->{bin}->{dest} . '/.htaccess' )
+      or warn $!;
+    print HTACCESS $BinHtAccess, "\n";
+    print HTACCESS
+      "ErrorDocument 401 bin/view$scriptSuffix/System/UserRegistration\n";
+    close HTACCESS;
 
-#foreach my $dir (qw( pub/Trash data lib locale logs templates test tools )) {
-#foreach my $dir (qw( data lib locale logs templates test tools )) {
-#    my $abs_dir = $localDirConfig->{}/$dir;
-#    open( HTACCESS, '>', "$abs_dir/.htaccess" ) or warn $@;
-#    print HTACCESS "Deny from all\n";
-#    close( HTACCESS );
-#}
+  #foreach my $dir (qw( pub/Trash data lib locale logs templates test tools )) {
+  #foreach my $dir (qw( data lib locale logs templates test tools )) {
+  #    my $abs_dir = $localDirConfig->{}/$dir;
+  #    open( HTACCESS, '>', "$abs_dir/.htaccess" ) or warn $@;
+  #    print HTACCESS "Deny from all\n";
+  #    close( HTACCESS );
+  #}
 
 ################################################################################
-# finish/cleanup
+    # finish/cleanup
 
-rmtree 'tmp/';
+    rmtree 'tmp/';
+
 #unlink $0;			# remove this installation program (security!)
 #chmod 0440, $0;		# doesn't seem to be working??? ah, probably an ownership issue (but why does rm work?)
 }
@@ -464,20 +500,24 @@ rmtree 'tmp/';
 # parameters
 # module: module filename relative to components (eg, kernels/FoswikiDEVELOP6666.zip or extension/BlogPlugin.zip)
 sub InstallFoswikiExtension {
-    my ( $module ) = @_;
+    my ($module) = @_;
 
-    my ( $text, $success, $plugins ) = Foswiki::Contrib::FoswikiInstallerContrib::_InstallFoswikiExtension({ 
-	module => $module,
-	tmpInstall => $tmpInstall,
-	mapFoswikiDirs => $mapFoswikiDirs,
-	localDirConfig => $localDirConfig,
-    });
-#    print $q->li( @$text );
-    foreach my $plugin ( sort keys %$plugins )
-    {
-	++$installedPlugins{ $plugin };
+    my ( $text, $success, $plugins ) =
+      Foswiki::Contrib::FoswikiInstallerContrib::_InstallFoswikiExtension(
+        {
+            module         => $module,
+            tmpInstall     => $tmpInstall,
+            mapFoswikiDirs => $mapFoswikiDirs,
+            localDirConfig => $localDirConfig,
+        }
+      );
+
+    #    print $q->li( @$text );
+    foreach my $plugin ( sort keys %$plugins ) {
+        ++$installedPlugins{$plugin};
     }
-#    $installedPlugins{ keys %$plugins } = values %$plugins;
+
+    #    $installedPlugins{ keys %$plugins } = values %$plugins;
 
     return 1;
 }
@@ -502,14 +542,18 @@ function expand_collapse_repositories( rep ) {
 };
 
     foreach my $rep ( sort { lc $a cmp lc $b } keys %$repository ) {
-	next unless scalar @{$repository->{$rep}};	# don't print empty repositories
-	$text .= qq{<div class=repository>
+        next
+          unless
+            scalar @{ $repository->{$rep} };    # don't print empty repositories
+        $text .= qq{<div class=repository>
 <div class=repositoryName onclick="expand_collapse_repositories('$rep')" ><img src="http://$rep/favicon.ico" width="16" height="16" /> $rep</div>
 <div name="repository_files" id="$rep"><ul>};
-	foreach my $foswikifor ( @{$repository->{$rep}} ) {
-	    $text .= q{<li><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = } . qq{'$foswikifor->{url}'" >$foswikifor->{url}</a></li>};
-	}
-	$text .= "</div></ul></div>";
+        foreach my $foswikifor ( @{ $repository->{$rep} } ) {
+            $text .=
+q{<li><a href="javascript:()" onclick="document.getElementById('FoswikiFor').value = }
+              . qq{'$foswikifor->{url}'" >$foswikifor->{url}</a></li>};
+        }
+        $text .= "</div></ul></div>";
     }
 
     return $text;
@@ -518,35 +562,33 @@ function expand_collapse_repositories( rep ) {
 ################################################################################
 
 # parameters
-# cgi: 
+# cgi:
 sub foswikiForMenu {
     my $q = shift or die "no cgi?";
     my $text = '';
 
-my $repository = {
-    'foswiki.org' => [
-		    { url => 'http://sourceforge.net/projects/foswiki/files/foswiki/Foswiki-1.0.9.zip',
-    ],
-    'foswiki.biohack.net' => [
-		      ],
-    'wikiring.de' => [
-		       ],
-    'wikiring.com' => [
-		       ],
-    'distributedinformation.com' => [
-				     ],
-};
+    my $repository = {
+        'foswiki.org' => {
+            url => [
+'http://sourceforge.net/projects/foswiki/files/foswiki/Foswiki-1.0.9.zip',
+            ],
+            'foswiki.biohack.net'        => [],
+            'wikiring.de'                => [],
+            'wikiring.com'               => [],
+            'distributedinformation.com' => [],
+        };
 
-    system( 'htpasswd -V' );
-    my $htpasswd_avail = $? == -1 ? ' disabled=disabled ' : '';
+          system('htpasswd -V');
+          my $htpasswd_avail = $? == -1 ? ' disabled=disabled ' : '';
 
+          my ($foswikiUrl) = $ENV{SCRIPT_URI} =~ m|^(.*/)|;
 
-    my ( $foswikiUrl ) = $ENV{SCRIPT_URI} =~ m|^(.*/)|;
+          my $strHtmlForceInstallation =
+          isFoswikiAlreadyInstalled()
+        ? '<input type=checkbox name=force_installation id=force_installation> <b>Existing Foswiki installation detected.</b> Allow forced installation by overwriting files.<br/>'
+        : '';
 
-    my $strHtmlForceInstallation = isFoswikiAlreadyInstalled() ?
-	'<input type=checkbox name=force_installation id=force_installation> <b>Existing Foswiki installation detected.</b> Allow forced installation by overwriting files.<br/>' : '';
-
-    $text .= qq{
+          $text .= qq{
 <div id="container"><a id="topofpage"></a><div class="section">
 <!--==========================================================================================-->
 <div id="header"><!-- header image --></div>
@@ -572,9 +614,9 @@ Foswiki release to install <input type="text" name="FoswikiFor" id="FoswikiFor" 
 </div>
 }
 
-. _display_repositories( $q, $repository ) .
+          . _display_repositories( $q, $repository ) .
 
-qq{</fieldset>
+          qq{</fieldset>
 
 <!--==========================================================================================-->
 <fieldset><legend>2. Set Foswiki Settings</legend>
@@ -621,105 +663,133 @@ After the installation, you can start using the wiki right away or configure it 
 
 ################################################################################
 
-    $text .= $q->hidden( -name => 'FoswikiFor', -value => $q->param('FoswikiFor') );
+          $text .= $q->hidden(
+            -name  => 'FoswikiFor',
+            -value => $q->param('FoswikiFor')
+          );
 
 ################################################################################
 
-    return $text;
-}
+          return $text;
+      }
 
 ################################################################################
 
-# parameters
-# cgi: 
-sub installationMenu {
-    my $q = shift or die "no cgi?";
-    my $text = '';
+      # parameters
+      # cgi:
+      sub installationMenu {
+        my $q = shift or die "no cgi?";
+        my $text = '';
 
-    $text .= $q->start_form
-	. $q->hidden( -name => 'FoswikiFor', -value => $q->param('FoswikiFor') )
-	. $q->hidden( -name => 'force', -value => $q->param('force') )
-	. $q->submit( -name => 'install', -value => 'Install' );
+        $text .= $q->start_form
+          . $q->hidden(
+            -name  => 'FoswikiFor',
+            -value => $q->param('FoswikiFor')
+          )
+          . $q->hidden( -name => 'force', -value => $q->param('force') )
+          . $q->submit( -name => 'install', -value => 'Install' );
 
-    my @kernels = sort map { basename /(.*)\./ } <$tmpInstall/components/kernel/*>;
-    $text .= $q->div( { -class => 'kernel', },
-		      $q->checkbox_group( -name => 'kernel',
-					  -values => \@kernels,
-#					  -values => [ grep { m|\.| } @kernels ],
-#					  -labels => { @kernels },
-					  -linebreak => 'true',
-					  )
-		      );
-    
-    $text .= $q->div( { -class => 'configuration' },
-		      $q->b( 'perl' ) . ' (full path): ' 
-		      . $q->textfield( -name => 'perl', -default => $perl, -size => 40 )
-		      . $q->br
-		      . $q->small( '(may also be the name of a perl accelerator, e.g,. '
-				   . $q->a( { -href => "http://www.daemoninc.com/SpeedyCGI/" }, 'SpeedyCGI' ) . ')'
-				   )
-		      . $q->br
-		      . $q->b( 'WikiAdmin' ) . ': '
-		      . $q->textfield( -name => 'WikiAdmin', -default => $WikiAdmin, -size => 25 )
-		      . $q->br
-		      . $q->b( 'WebMasterEmail' ) . ': '
-		      . $q->textfield( -name => 'WebMasterEmail', -default => $WebMasterEmail, -size => 25 )
-		      . $q->br
-		      );
-			    
-    my @extensions = sort map { basename /(.*)\./ } <$tmpInstall/components/extension/*>;
+        my @kernels =
+          sort map { basename /(.*)\./ } <$tmpInstall/components/kernel/*>;
+        $text .= $q->div(
+            { -class => 'kernel', },
+            $q->checkbox_group(
+                -name   => 'kernel',
+                -values => \@kernels,
 
-    # do defaults creation/manipulation here, because CGI ...
-    if ( grep( /^all$/i, ( $q->param('extension') ) ) ) {
-	$q->param( -name => 'extension', -value => \@extensions );
+                #					  -values => [ grep { m|\.| } @kernels ],
+                #					  -labels => { @kernels },
+                -linebreak => 'true',
+            )
+        );
+
+        $text .= $q->div(
+            { -class => 'configuration' },
+            $q->b('perl')
+              . ' (full path): '
+              . $q->textfield( -name => 'perl', -default => $perl, -size => 40 )
+              . $q->br
+              . $q->small(
+                '(may also be the name of a perl accelerator, e.g,. '
+                  . $q->a( { -href => "http://www.daemoninc.com/SpeedyCGI/" },
+                    'SpeedyCGI' )
+                  . ')'
+              )
+              . $q->br
+              . $q->b('WikiAdmin') . ': '
+              . $q->textfield(
+                -name    => 'WikiAdmin',
+                -default => $WikiAdmin,
+                -size    => 25
+              )
+              . $q->br
+              . $q->b('WebMasterEmail') . ': '
+              . $q->textfield(
+                -name    => 'WebMasterEmail',
+                -default => $WebMasterEmail,
+                -size    => 25
+              )
+              . $q->br
+        );
+
+        my @extensions =
+          sort map { basename /(.*)\./ } <$tmpInstall/components/extension/*>;
+
+        # do defaults creation/manipulation here, because CGI ...
+        if ( grep( /^all$/i, ( $q->param('extension') ) ) ) {
+            $q->param( -name => 'extension', -value => \@extensions );
+        }
+
+        $text .= $q->div(
+            { -class => 'extension', },
+            $q->checkbox_group(
+                -name   => 'extension',
+                -values => \@extensions,
+
+                #					  -values => [ grep { m|\.| } @extensions ],
+                #					  -labels => { @extensions },
+                -linebreak => 'true',
+                -columns   => 3,
+            )
+        );
+
+        $text .= $q->end_form;
+
+        return $text;
     }
 
-    $text .= $q->div( { -class => 'extension', },
-		      $q->checkbox_group( -name => 'extension',
-					  -values => \@extensions,
-#					  -values => [ grep { m|\.| } @extensions ],
-#					  -labels => { @extensions },
-					  -linebreak => 'true',
-					  -columns => 3,
-					  )
-		      );
-
-    $text .= $q->end_form;
-
-    return $text;
-}
-
 ################################################################################
 ################################################################################
 
-use Socket;
-sub getUrl
-{
-    my $p = shift;
+    use Socket;
 
-    my ( $theHost, $theUrl ) = $p->{url} =~ m|http://(.*?)(/.*)|;
-    my $thePort = 80;
-    my $theHeader = '';
+    sub getUrl {
+        my $p = shift;
 
-    my $result = '';
-    my $req = "GET $theUrl HTTP/1.0\r\n$theHeader\r\n\r\n";
-    my ( $iaddr, $paddr, $proto );
-    $iaddr   = inet_aton( $theHost );
-    $paddr   = sockaddr_in( $thePort, $iaddr );
-    $proto   = getprotobyname( 'tcp' );
-    socket( SOCK, PF_INET, SOCK_STREAM, $proto )  or die "socket: $!";
-    connect( SOCK, $paddr ) or die "connect: $!";
-    select SOCK; $| = 1;
-    print SOCK $req;
-    while( <SOCK> ) { $result .= $_; }
-    close( SOCK )  or die "close: $!";
-    select STDOUT;
-    return ( $result, 0 );
-}
+        my ( $theHost, $theUrl ) = $p->{url} =~ m|http://(.*?)(/.*)|;
+        my $thePort   = 80;
+        my $theHeader = '';
+
+        my $result = '';
+        my $req    = "GET $theUrl HTTP/1.0\r\n$theHeader\r\n\r\n";
+        my ( $iaddr, $paddr, $proto );
+        $iaddr = inet_aton($theHost);
+        $paddr = sockaddr_in( $thePort, $iaddr );
+        $proto = getprotobyname('tcp');
+        socket( SOCK, PF_INET, SOCK_STREAM, $proto ) or die "socket: $!";
+        connect( SOCK, $paddr ) or die "connect: $!";
+        select SOCK;
+        $| = 1;
+        print SOCK $req;
+        while (<SOCK>) { $result .= $_; }
+        close(SOCK) or die "close: $!";
+        select STDOUT;
+        return ( $result, 0 );
+    }
 
 ################################################################################
 
-# url: 
+# url:
 #use LWP::UserAgent;
 #use HTTP::Request;
 #use HTTP::Response;
@@ -741,7 +811,8 @@ sub getUrl
 
 ################################################################################
 ################################################################################
-# WARNING: ../FoswikiInstallerContrib.pm gets appended to the end of this file,
-#          so don't do anything silly like __DATA__ or __END__ blocks :)
+ # WARNING: ../FoswikiInstallerContrib.pm gets appended to the end of this file,
+ #          so don't do anything silly like __DATA__ or __END__ blocks :)
 ################################################################################
 ################################################################################
+## Please see file perltidy.ERR

@@ -27,56 +27,59 @@ use FindBin;
 $main::VERSION = '0.70';
 my $Config = {
     kernel => 'LATEST',
-    force => 0,
-# HELP OPTIONS
-    agent => basename( $0 ) . '/' . $main::VERSION,
+    force  => 0,
+
+    # HELP OPTIONS
+    agent   => basename($0) . '/' . $main::VERSION,
     verbose => 0,
-    help => 0,
-    man => 0,
-    debug => 0,
+    help    => 0,
+    man     => 0,
+    debug   => 0,
 };
-Getopt::Long::Configure( 'bundling' );
-my $result = GetOptions( $Config,
-			 'url=s', 'dir=s', 'FoswikiFor=s', 'kernel=s', 'extension=s@',	# FoswikiFor|Personality(Module) ?
-			 'perl=s', 'WikiAdmin=s', 'WIKIWEBMASTER=s', 'force|f',
-			 'verbose', 'help|?', 'man', 'debug', 'agent=s',
-			 );
-pod2usage( 1 ) if $Config->{help};
-pod2usage({ -exitval => 1, -verbose => 2 }) if $Config->{man};
-print Dumper( $Config ) if $Config->{debug};
+Getopt::Long::Configure('bundling');
+my $result = GetOptions(
+    $Config,
+    'url=s', 'dir=s', 'FoswikiFor=s', 'kernel=s',
+    'extension=s@',    # FoswikiFor|Personality(Module) ?
+    'perl=s', 'WikiAdmin=s', 'WIKIWEBMASTER=s', 'force|f',
+    'verbose', 'help|?', 'man', 'debug', 'agent=s',
+);
+pod2usage(1) if $Config->{help};
+pod2usage( { -exitval => 1, -verbose => 2 } ) if $Config->{man};
+print Dumper($Config) if $Config->{debug};
 
 ################################################################################
 
 # check required parameters
 my $requiredParameterError = 0;
-foreach my $p (qw( url dir ))
-{
-    $requiredParameterError = 1, warn qq{required parameter "$p" not specified\n} unless $Config->{ $p };
+foreach my $p (qw( url dir )) {
+    $requiredParameterError = 1,
+      warn qq{required parameter "$p" not specified\n}
+      unless $Config->{$p};
 }
 exit if $requiredParameterError;
 
 ################################################################################
 
-( $Config->{scriptName} ) = $Config->{url} =~ m|.*/(.*(\..*)?)$|;
+( $Config->{scriptName} )   = $Config->{url}        =~ m|.*/(.*(\..*)?)$|;
 ( $Config->{scriptSuffix} ) = $Config->{scriptName} =~ m|(\..*)$|;
 $Config->{scriptSuffix} ||= '';
 
-exit ( PushRemoteFoswikiInstall({ %$Config }) == 0 );
+exit( PushRemoteFoswikiInstall( {%$Config} ) == 0 );
 
 ################################################################################
 
-sub logSystem
-{
+sub logSystem {
     print STDERR "logSystem: ", Dumper( \@_ ) if $Config->{debug};
-    system( @_ );
+    system(@_);
 }
 
 ################################################################################
 
-sub PushRemoteFoswikiInstall
-{
+sub PushRemoteFoswikiInstall {
     my $parms = shift;
-    print STDERR "PushRemoteFoswikiInstall: ", Dumper( $parms ) if $parms->{debug};
+    print STDERR "PushRemoteFoswikiInstall: ", Dumper($parms)
+      if $parms->{debug};
 
     die "no url?" unless $parms->{url};
     die "no dir?" unless $parms->{dir};
@@ -89,42 +92,43 @@ sub PushRemoteFoswikiInstall
     # TODO: pick new variable name for $name
     my ( $name, $fh );
     do { $name = tmpnam() }
-    until $fh = IO::File->new($name, O_RDWR|O_CREAT|O_EXCL);
+      until $fh = IO::File->new( $name, O_RDWR | O_CREAT | O_EXCL );
 
     chmod 0755, $name;
     $script =~ s|/usr/bin/perl|$Config->{perl}| if $Config->{perl};
     print $fh $script;
 
-    logSystem( qq{scp -q $name $parms->{dir}/$Config->{scriptName}} );
-#    die "Error uploading install script: $!" if $!;
+    logSystem(qq{scp -q $name $parms->{dir}/$Config->{scriptName}});
+
+    #    die "Error uploading install script: $!" if $!;
 
     unlink $name;
 
     my $urlInstallWithConfig = URI->new( $parms->{url} );
     my $urlParameters = { install => 'install' };
+
     # add optional parameters
-    map { $urlParameters->{$_} = $Config->{$_} if $Config->{$_} } 
-    	qw( FoswikiFor kernel extension perl WikiAdmin WIKIWEBMASTER force );
-    $urlInstallWithConfig->query_form( $urlParameters );
+    map { $urlParameters->{$_} = $Config->{$_} if $Config->{$_} }
+      qw( FoswikiFor kernel extension perl WikiAdmin WIKIWEBMASTER force );
+    $urlInstallWithConfig->query_form($urlParameters);
     $Config->{debug} && print "\n$urlInstallWithConfig\n";
 
-    if ( defined ( my $report = LWP::Simple::get( $urlInstallWithConfig ) ) )
-    {
-	open( REPORT, '>', 'install-report.html' ) or die $!;
-	print REPORT $report;
-	close REPORT;
-	return 1;
+    if ( defined( my $report = LWP::Simple::get($urlInstallWithConfig) ) ) {
+        open( REPORT, '>', 'install-report.html' ) or die $!;
+        print REPORT $report;
+        close REPORT;
+        return 1;
     }
-    else
-    {
-	print "ERROR installing $urlInstallWithConfig\n";
-	return 0;
+    else {
+        print "ERROR installing $urlInstallWithConfig\n";
+        return 0;
     }
 }
 
 ################################################################################
 
 __DATA__
+
 =head1 NAME
 
 install-foswwiki.pl - fully automated network Foswiki command-line installation frontend
