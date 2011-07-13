@@ -442,8 +442,8 @@ print HTACCESS $BinHtAccess, "\n";
 print HTACCESS "ErrorDocument 401 bin/view$scriptSuffix/System/UserRegistration\n";
 close HTACCESS;
 
-#foreach my $dir qw( pub/Trash data lib locale logs templates test tools ) {
-#foreach my $dir qw( data lib locale logs templates test tools ) {
+#foreach my $dir (qw( pub/Trash data lib locale logs templates test tools )) {
+#foreach my $dir (qw( data lib locale logs templates test tools )) {
 #    my $abs_dir = $localDirConfig->{}/$dir;
 #    open( HTACCESS, '>', "$abs_dir/.htaccess" ) or warn $@;
 #    print HTACCESS "Deny from all\n";

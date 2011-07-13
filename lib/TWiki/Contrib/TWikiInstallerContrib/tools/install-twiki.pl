@@ -49,7 +49,7 @@ print Dumper( $Config ) if $Config->{debug};
 
 # check required parameters
 my $requiredParameterError = 0;
-foreach my $p qw( url dir )
+foreach my $p (qw( url dir ))
 {
     $requiredParameterError = 1, warn qq{required parameter "$p" not specified\n} unless $Config->{ $p };
 }

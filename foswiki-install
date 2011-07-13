@@ -414,7 +414,7 @@ open( HTACCESS, '>', "$pub_dir/.htaccess" ) or warn $!;
 print HTACCESS "SetHandler none\n";
 close HTACCESS;
 
-#foreach my $dir qw( pub/Trash data lib locale logs templates test tools foswikiplugins ) {
+#foreach my $dir (qw( pub/Trash data lib locale logs templates test tools foswikiplugins )) {
 foreach my $dir ( my @dist = qw( data lib locale logs templates working ), my @devel = qw( test tools foswikiplugins ) ) {
     my $abs_dir = $mapFoswikiDirs->{$dir}->{dest} || "$foswikiDir/$dir";
     print STDERR ".htaccess for [$abs_dir]\n";
